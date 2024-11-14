@@ -172,6 +172,24 @@ class MenuRol extends BaseDatos{
 
         return $seConcreto;
     }
+
+    public function modificar(){
+        $seConcreto = false;
+
+        $idmenu = $this->getObjMenu()->getId();
+        $idRol = $this->getObjRol()->getId();
+        $consulta = "UPDATE menurol SET ";
+        $consulta .= " idrol = " . $idRol;
+        $consulta .= " WHERE idmenu =" . $idmenu;
+
+        if ($this->Iniciar()){
+            if ($this->Ejecutar($consulta)){
+                $seConcreto = true;
+            } else $this->setMensajeOperacion("Menurol->modificacion: " . $this->getError());
+        } else $this->setMensajeOperacion("Menurol->modificacion: " . $this->getError());
+
+        return $seConcreto;
+    }
 }
 
 
