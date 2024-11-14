@@ -1,5 +1,5 @@
 <?php
-class AbmCompra{
+class AbmCompraEstado{
 
     //Espera como parametro un arreglo asociativo donde las claves coinciden con las variables instancias del objeto
     public function abm($datos){
@@ -26,33 +26,49 @@ class AbmCompra{
     /**
      * Espera como parametro un arreglo asociativo donde las claves coinciden con los nombres de las variables instancias del objeto
      * @param array $param
-     * @return Compra|null
+     * @return CompraEstado|null
      */
     private function cargarObjeto($param){
         $obj = null;
 
-        if(array_key_exists('idusuario',$param) && array_key_exists('idcompra', $param)){
-            $obj = new Compra();
+        if(array_key_exists('idcompra',$param)){
+            // obtengo el obj compra asociado
+            $objCompra = new Compra();
+            $objCompra->buscar($param['idcompra']);
 
-            $objUsuario = new Usuario;
-            $objUsuario->buscar($param["idusuario"]);
-        
-            $obj->cargar($param['idcompra'],"NOW()", $objUsuario);
+            // obtengo el obj compraestadotipo
+            if (array_key_exists('idcompraestadotipo', $param)){
+                $objCompraEstado = new CompraEstadoTipo();
+                $objCompraEstado->buscar($param['idcompraestadotipo']);
+            } else $objCompraEstado = null;
+
+            if (array_key_exists('cefechaini', $param)){
+                $cefechaini = $param['cefechaini'];
+            } else $cefechaini = '0000-00-00 00:00:00';
+
+            if (array_key_exists('cefechafin', $param)){
+                $cefechafin = $param['cefechafin'];
+            } else $cefechafin = '0000-00-00 00:00:00';
+
+            // armo el compraestado
+            $obj = new CompraEstado();
+            $obj->cargar($param['idcompraestado'], $objCompra, $objCompraEstado, $cefechaini, $cefechafin);
         }
+
         return $obj;
     }
 
     /**
      * Espera como parametro un arreglo asociativo donde las claves coinciden con los nombres de las variables instancias del objeto que son claves
      * @param array $param
-     * @return Compra|null
+     * @return CompraEstado|null
      */
     private function cargarObjetoConClave($param){
         $obj = null;
 
-        if(isset($param['idcompra'])){
-            $obj = new Compra();
-            $obj->buscar($param["idcompra"]);
+        if(isset($param['idcompraestado'])){
+            $obj = new CompraEstado();
+            $obj->buscar($param["idcompraestado"]);
         }
         return $obj;
     }
@@ -66,7 +82,7 @@ class AbmCompra{
 
     private function seteadosCamposClaves($param){
         $resp = false;
-        if (isset($param['idcompra']))
+        if (isset($param['idcompraestado']))
             $resp = true;
         return $resp;
     }
@@ -111,6 +127,7 @@ class AbmCompra{
         $resp = false;
         if ($this->seteadosCamposClaves($param)){
             $elObjtTabla = $this->cargarObjeto($param);
+            $elObjtTabla->setId($param["idcompraestado"]);
             if($elObjtTabla!=null and $elObjtTabla->modificar()){
                 $resp = true;
             }
@@ -127,15 +144,23 @@ class AbmCompra{
         $where = " true ";
 
         if($param<>NULL){
+            if(isset($param['idcompraestado']))
+                $where.=" and idcompraestado =".$param['idcompraestado'];
+
             if(isset($param['idcompra']))
-                $where.=" and idcompra =".$param['idcompra'];
-            if(isset($param['cofecha']))
-                $where.=" and cofecha ='".$param['cofecha']."'";
-            if(isset($param['idusuario']))
-                $where.=" and idusuario ='".$param['idusuario']."'";
+                $where.=" and idcompra ='".$param['idcompra']."'";
+
+            if(isset($param['idcompraestadotipo']))
+                $where.=" and idcompraestadotipo ='".$param['idcompraestadotipo']."'";
+
+            if(isset($param['cefechaini']))
+            $where.=" and cefechaini ='".$param['cefechaini']."'";
+
+            if(isset($param['cefechafin']))
+            $where.=" and cefechafin ='".$param['cefechafin']."'"; 
         }
 
-        $obj = new Compra();
+        $obj = new CompraEstado();
         $arreglo = $obj->listar($where);
         return $arreglo;
     }
