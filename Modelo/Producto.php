@@ -51,10 +51,13 @@ class Producto extends BaseDatos{
     public function cargar($id, $nombre, $proartista, $proprecio, $detalle, $cantStock, $protipo, $prodeshabilitado, $proimg64){
         $this->setId($id);
         $this->setNombre($nombre);
-        $this->setArtista($artista);
+        $this->setArtista($proartista);
         $this->setPrecio($proprecio);
         $this->setDetalle($detalle);
         $this->setCantStock($cantStock);
+        $this->setTipo($protipo);
+        $this->setDeshabilitado($prodeshabilitado);
+        $this->setImg64($proimg64);
     }
 
     public function getId(){

@@ -50,6 +50,44 @@ spl_autoload_register(function($class_name){
             return;
         }
     }
-})
+});
+
+/**
+ * Recibe un objeto y convierte sus propiedades a un arreglo asociativo.
+ * @param object $object
+ * @return array  
+ */
+function dismount($object) {
+    // con get_class obtenemos el nombre de la clase y reflectionClass obtenemos y manipulamos información sobre el $object
+    $reflectionClass = new ReflectionClass(get_class($object));
+    $array = array();
+    // recorremos la lista de propiedades de $reflectionClass (adquiridas de $object),
+    foreach ($reflectionClass->getProperties() as $property) {
+        // cambiamos la visibilidad de la propiedad a Accesible (en caso de que fuera private o protected), para poder acceder a sus valores.
+        $property->setAccessible(true);
+        // ingresamos el nombre de la propiedad como una clave en el arreglo asociativo creado, con su respectivo valor.
+        $array[$property->getName()] = $property->getValue($object);
+        // reestablecemos la visibilidad de la propiedad a su estado original. 
+        $property->setAccessible(false);
+    }
+    return $array;
+}
+
+/**
+ * Recibe un arreglo de objetos y devuelve un arreglo con arreglos asociativos.
+ * @param array
+ */
+function convert_array($param) {
+    $_AAux= array();
+    if (!empty($param)) {
+        if (count($param)){
+            foreach($param as $obj) {
+                // itera sobre el arreglo de objetos y los convierte a arreglos asociativos
+                array_push($_AAux,dismount($obj));    
+            }
+        }
+    }
+    return $_AAux;
+}
 
 ?>
