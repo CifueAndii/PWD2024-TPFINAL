@@ -2,6 +2,7 @@
 class Producto extends BaseDatos{
     private $id;
     private $nombre;
+    private $proartista;
     private $proprecio;
     private $detalle;
     private $cantStock;
@@ -9,17 +10,6 @@ class Producto extends BaseDatos{
     private $prodeshabilitado;
     private $proimg64;
     private $mensajeOperacion;
-
-    // CREATE TABLE `producto` (
-    //     `idproducto` bigint(20) NOT NULL,
-    //     `pronombre` int(11) NOT NULL,
-    //     `proprecio` decimal(11,2) NOT NULL,
-    //     `prodetalle` varchar(512) NOT NULL,
-    //     `procantstock` int(11) NOT NULL,
-    //     `protipo` varchar(512) NOT NULL,
-    //     `prodeshabilitado` timestamp NULL DEFAULT NULL,
-    //     `proimg64` varchar(512) NOT NULL,
-    //   ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
     /////////////////////////////
     // CONSTRUCTOR //
@@ -33,6 +23,7 @@ class Producto extends BaseDatos{
         parent::__construct();
         $this->id = -1;
         $this->nombre = "";
+        $this->proartista = "";
         $this->proprecio = 0;
         $this->detalle = "";
         $this->cantStock = 0;
@@ -49,6 +40,7 @@ class Producto extends BaseDatos{
      * Carga datos al producto actual
      * @param int $id
      * @param string $nombre
+     * @param string $proartista
      * @param float $proprecio
      * @param string $detalle
      * @param int $cantStock
@@ -56,9 +48,10 @@ class Producto extends BaseDatos{
      * @param timestamp|null $prodeshabilitado
      * @param string $proimg64
      */
-    public function cargar($id, $nombre, $proprecio, $detalle, $cantStock, $protipo, $prodeshabilitado, $proimg64){
+    public function cargar($id, $nombre, $proartista, $proprecio, $detalle, $cantStock, $protipo, $prodeshabilitado, $proimg64){
         $this->setId($id);
         $this->setNombre($nombre);
+        $this->setArtista($artista);
         $this->setPrecio($proprecio);
         $this->setDetalle($detalle);
         $this->setCantStock($cantStock);
@@ -75,6 +68,12 @@ class Producto extends BaseDatos{
     }
     public function setNombre($nombre){
         $this->nombre = $nombre;
+    }
+    public function getArtista(){
+        return $this->proartista;
+    }
+    public function setArtista($artista){
+        $this->proartista = $artista;
     }
     public function getPrecio(){
         return $this->proprecio;
@@ -139,6 +138,7 @@ class Producto extends BaseDatos{
                     $this->cargar(
                         $fila["idproducto"],
                         $fila["pronombre"],
+                        $fila["proartista"],
                         $fila["proprecio"],
                         $fila["prodetalle"],
                         $fila["procantstock"],
@@ -176,6 +176,7 @@ class Producto extends BaseDatos{
                     $objProducto->cargar(
                         $fila["idproducto"],
                         $fila["pronombre"],
+                        $fila["proartista"],
                         $fila["proprecio"],
                         $fila["prodetalle"],
                         $fila["procantstock"],
@@ -200,8 +201,8 @@ class Producto extends BaseDatos{
         $resp = null;
         $resultado = false;
 
-        $consulta = "INSERT INTO producto(pronombre, proprecio, prodetalle, procantstock, protipo, prodeshabilitado, proimg64)
-        VALUES ('". $this->getNombre(). "',". $this->getPrecio() .",'". $this->getDetalle() ."',". $this->getCantStock() .",'" . $this->getTipo() . "'," . $this->getDeshabilitado() . ",'" .$this->getImg64() ."');";
+        $consulta = "INSERT INTO producto(pronombre, proartista, proprecio, prodetalle, procantstock, protipo, prodeshabilitado, proimg64)
+        VALUES ('". $this->getNombre(). "','". $this->getArtista() . "',". $this->getPrecio() .",'". $this->getDetalle() ."',". $this->getCantStock() .",'" . $this->getTipo() . "'," . $this->getDeshabilitado() . ",'" .$this->getImg64() ."');";
 
         if($this->Iniciar()){
             $resp = $this->Ejecutar($consulta);
@@ -222,6 +223,7 @@ class Producto extends BaseDatos{
         $seConcreto = false;
 
         $consulta = "UPDATE producto SET pronombre = '". $this->getNombre() ."',
+        proartista = '" . $this->getArtista() . "', 
         proprecio =". $this->getPrecio(). ", 
         prodetalle = '". $this->getDetalle() ."',
         procantstock = ". $this->getCantStock() .",
