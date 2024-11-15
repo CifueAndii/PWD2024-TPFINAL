@@ -122,7 +122,9 @@ INSERT INTO `menu` (`idmenu`, `menombre`, `medescripcion`, `idpadre`, `medeshabi
 (9, 'Administrar productos', 'adminProductos', 2, NULL),
 (10, 'Cargar productos', 'cargarProducto', 2, NULL),
 (11, 'Carrito', 'carrito', 1, NULL),
-(12, 'Mis compras', 'historialCompras', 1, NULL);
+(12, 'Mis compras', 'historialCompras', 1, NULL),
+(13, 'Mi perfil', 'miPerfil', 1, NULL);
+
 
 -- --------------------------------------------------------
 
