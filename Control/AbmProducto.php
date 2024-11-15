@@ -127,6 +127,8 @@ class AbmProducto{
                 $where .= "and idproducto = " . $param["id"];
             if(isset($param["nombre"]))
                 $where .= "and pronombre LIKE '%" . $param["nombre"] . "%'";
+            if (isset($param["protipo"]))
+                $where .= "and protipo = '" . $param["protipo"] . "'";
         }
 
         $obj = new Producto();

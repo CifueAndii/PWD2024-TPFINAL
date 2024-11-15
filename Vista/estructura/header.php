@@ -75,10 +75,10 @@ if ($sesionActiva) {
                                     Productos
                                 </a>
                                 <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                                    <li><a class="dropdown-item" href="#">CDs</a></li>
-                                    <li><a class="dropdown-item" href="#">DVDs</a></li>
-                                    <li><a class="dropdown-item" href="#">Vinilos</a></li>
-                                    <li><a class="dropdown-item" href="#">Todos los productos</a></li>
+                                    <li><a class="dropdown-item" href="../Cliente/listaCD.php">CDs</a></li>
+                                    <li><a class="dropdown-item" href="../Cliente/listaDVD.php">DVDs</a></li>
+                                    <li><a class="dropdown-item" href="../Cliente/listaVinilos.php">Vinilos</a></li>
+                                    <li><a class="dropdown-item" href="../Cliente/listaProductos.php">Todos los productos</a></li>
                                 </ul>
                             </li>
                     <?php

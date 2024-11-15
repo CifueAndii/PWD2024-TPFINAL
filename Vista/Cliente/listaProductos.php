@@ -35,20 +35,39 @@ background: linear-gradient(360deg, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 0%, rgb(33, 
 
                     <div class="col mb-5">
                         <div class="card h-100">
-                            <img class="card-img-top" src="<?php echo ($producto["proimg64"]); ?>" alt="<?php echo $producto["nombre"]?>">
-                            <div class="card-body">
+                            <div class="ratio ratio-1x1">                            
+                                <img class="card-img-top mt-auto" src="<?php echo ($producto["proimg64"]); ?>" alt="<?php echo $producto["nombre"]?>">
+                            </div>
+                            <!-- card body -->
+                            <div class="card-body mt-auto">
                                 <div class="text-center">
                                     <h5 class="fw-bolder">
                                         <?php echo $producto["nombre"];?>
                                     </h5>
-                                    <p>
+                                    <p class="text-secondary">
                                         <?php echo $producto["detalle"];?>
                                     </p>
-                                    <p>
+                                    <p class="h5">
                                         <?php echo "$" . $producto["proprecio"]; ?>
                                     </p>
                                 </div>
                             </div>
+                            <!-- card footer -->
+                             <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
+                                <?php 
+                                if ($producto["cantStock"] < 1){
+                                ?>
+                                <div class="text-center">SIN STOCK</div>
+                                <?php
+                                } else{ ?>
+                                <form action="../Action/cargarCarrito.php" method="post">
+                                    <input type="hidden" name="idproducto" value="<?php echo $producto["id"];?>">
+                                    <div class="text-center"><button class="btn btn-outline-dark mt-auto" type="submit">Agregar al carrito</button></div>
+                                </form>
+                                <?php
+                                }
+                                ?>
+                             </div>
                         </div>
                     </div>
             <?php
