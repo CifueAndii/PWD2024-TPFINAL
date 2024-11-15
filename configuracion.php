@@ -8,7 +8,7 @@ header ("Cache-Control: no-cache, must-revalidate ");
 /////////////////////////////
 
 // Ubicación del Proyecto
-$PROYECTO ='PWD 2024 TPFINAL';
+$PROYECTO ='PWD2024-TPFINAL';
 $ROOT =$_SERVER['DOCUMENT_ROOT']."/$PROYECTO/";
 
 include_once($ROOT.'Util/funciones.php');

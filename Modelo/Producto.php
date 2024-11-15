@@ -2,12 +2,24 @@
 class Producto extends BaseDatos{
     private $id;
     private $nombre;
+    private $proprecio;
     private $detalle;
     private $cantStock;
+    private $protipo;
+    private $prodeshabilitado;
+    private $proimg64;
     private $mensajeOperacion;
 
-    // precio
-    // imagen
+    // CREATE TABLE `producto` (
+    //     `idproducto` bigint(20) NOT NULL,
+    //     `pronombre` int(11) NOT NULL,
+    //     `proprecio` decimal(11,2) NOT NULL,
+    //     `prodetalle` varchar(512) NOT NULL,
+    //     `procantstock` int(11) NOT NULL,
+    //     `protipo` varchar(512) NOT NULL,
+    //     `prodeshabilitado` timestamp NULL DEFAULT NULL,
+    //     `proimg64` varchar(512) NOT NULL,
+    //   ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
     /////////////////////////////
     // CONSTRUCTOR //
@@ -21,8 +33,12 @@ class Producto extends BaseDatos{
         parent::__construct();
         $this->id = -1;
         $this->nombre = "";
+        $this->proprecio = 0;
         $this->detalle = "";
         $this->cantStock = 0;
+        $this->protipo = "";
+        $this->prodeshabilitado = null;
+        $this->proimg64 = "";
     }
 
     /////////////////////////////
@@ -33,12 +49,17 @@ class Producto extends BaseDatos{
      * Carga datos al producto actual
      * @param int $id
      * @param string $nombre
+     * @param float $proprecio
      * @param string $detalle
      * @param int $cantStock
+     * @param string $protipo
+     * @param timestamp|null $prodeshabilitado
+     * @param string $proimg64
      */
-    public function cargar($id, $nombre, $detalle, $cantStock){
+    public function cargar($id, $nombre, $proprecio, $detalle, $cantStock, $protipo, $prodeshabilitado, $proimg64){
         $this->setId($id);
         $this->setNombre($nombre);
+        $this->setPrecio($proprecio);
         $this->setDetalle($detalle);
         $this->setCantStock($cantStock);
     }
@@ -55,6 +76,12 @@ class Producto extends BaseDatos{
     public function setNombre($nombre){
         $this->nombre = $nombre;
     }
+    public function getPrecio(){
+        return $this->proprecio;
+    }
+    public function setPrecio($precio){
+        $this->proprecio = $precio;
+    }
     public function getDetalle(){
         return $this->detalle;
     }
@@ -66,6 +93,24 @@ class Producto extends BaseDatos{
     }
     public function setCantStock($cantStock){
         $this->cantStock = $cantStock;
+    }
+    public function getTipo(){
+        return $this->protipo;
+    }
+    public function setTipo($tipo){
+        $this->protipo = $tipo;
+    }
+    public function getDeshabilitado(){
+        return $this->prodeshabilitado;
+    }
+    public function setDeshabilitado($timestamp){
+        $this->prodeshabilitado = $timestamp;
+    }
+    public function getImg64(){
+        return $this->proimg64;
+    }
+    public function setImg64($img){
+        $this->proimg64 = $img;
     }
     public function getMensajeOperacion(){
         return $this->mensajeOperacion;
@@ -94,8 +139,12 @@ class Producto extends BaseDatos{
                     $this->cargar(
                         $fila["idproducto"],
                         $fila["pronombre"],
+                        $fila["proprecio"],
                         $fila["prodetalle"],
-                        $fila["procantstock"]
+                        $fila["procantstock"],
+                        $fila["protipo"],
+                        $fila["prodeshabilitado"],
+                        $fila["proimg64"]
                     );
 
                     $encontro = true;
@@ -127,8 +176,12 @@ class Producto extends BaseDatos{
                     $objProducto->cargar(
                         $fila["idproducto"],
                         $fila["pronombre"],
+                        $fila["proprecio"],
                         $fila["prodetalle"],
-                        $fila["procantstock"]
+                        $fila["procantstock"],
+                        $fila["protipo"],
+                        $fila["prodeshabilitado"],
+                        $fila["proimg64"]
                     );
 
                     array_push($arreglo, $objProducto);
@@ -147,8 +200,8 @@ class Producto extends BaseDatos{
         $resp = null;
         $resultado = false;
 
-        $consulta = "INSERT INTO producto(pronombre, prodetalle, procantstock)
-        VALUES ('". $this->getNombre() ."','". $this->getDetalle() ."',". $this->getCantStock() .");";
+        $consulta = "INSERT INTO producto(pronombre, proprecio, prodetalle, procantstock, protipo, prodeshabilitado, proimg64)
+        VALUES ('". $this->getNombre(). "',". $this->getPrecio() .",'". $this->getDetalle() ."',". $this->getCantStock() .",'" . $this->getTipo() . "'," . $this->getDeshabilitado() . ",'" .$this->getImg64() ."');";
 
         if($this->Iniciar()){
             $resp = $this->Ejecutar($consulta);
@@ -169,8 +222,12 @@ class Producto extends BaseDatos{
         $seConcreto = false;
 
         $consulta = "UPDATE producto SET pronombre = '". $this->getNombre() ."',
+        proprecio =". $this->getPrecio(). ", 
         prodetalle = '". $this->getDetalle() ."',
-        procantstock = '". $this->getCantStock() ."'
+        procantstock = ". $this->getCantStock() .",
+        protipo = '" . $this->getTipo() . "',
+        prodeshabilitado = " . $this->getDeshabilitado() . ",
+        proimg64 = '" . $this->getImg64() . "' 
         WHERE idproducto = '" . $this->getid(). "'";
 
         if($this->Iniciar()){

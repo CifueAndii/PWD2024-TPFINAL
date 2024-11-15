@@ -30,9 +30,9 @@ class AbmProducto{
     private function cargarObjeto($param){
         $obj = null;
 
-        if(array_key_exists('nombre',$param) and array_key_exists('detalle',$param) and array_key_exists('cantstock',$param)){
+        if(array_key_exists('nombre',$param) and array_key_exists('proprecio', $param) and array_key_exists('detalle',$param) and array_key_exists('cantstock',$param) and array_key_exists('protipo', $param) and array_key_exists('prodeshabilitado', $param) and array_key_exists('proimg64', $param)){
             $obj = new Producto();
-            $obj->cargar(null, $param["nombre"], $param["detalle"],  $param["cantstock"]);
+            $obj->cargar(null, $param["nombre"], $param['proprecio'], $param["detalle"],  $param["cantstock"], $param['protipo'], $param['prodeshabilitado'], $param['proimg64']);
         }
         return $obj;
     }
