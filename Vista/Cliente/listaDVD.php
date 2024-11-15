@@ -15,7 +15,7 @@ $listaProductos = convert_array($ABMProductos->buscar($datos));
 background: linear-gradient(360deg, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 0%, rgb(33, 36, 41) 100%);">
     <div class="container px-4 px-lg-5 my-5">
         <div class="text-center text-white">
-            <h1 class="display-8 fw-bolder">Todos los productos</h1>
+            <h1 class="display-8 fw-bolder">DVDs</h1>
             <p class="lead fw-normal text-white-50 mb-0">
             <div class="bi bi-heart-fill"></div>
             </p>
