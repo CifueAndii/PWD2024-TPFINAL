@@ -5,6 +5,10 @@ class Compra extends BaseDatos{
     private $objUsuario;
     private $mensajeOperacion;
 
+    /////////////////////////////
+    // CONSTRUCTOR //
+    /////////////////////////////
+
     /**
      * Método constructor
      */
@@ -16,6 +20,10 @@ class Compra extends BaseDatos{
         $this->objUsuario = new Usuario();
     }
 
+    /////////////////////////////
+    // SET Y GET //
+    /////////////////////////////
+
     /**
      * Carga datos a un objeto
      */
@@ -24,7 +32,6 @@ class Compra extends BaseDatos{
         $this->setCoFecha($coFecha);
         $this->setObjUsuario($objUsuario);
     }
-
     public function getId(){
         return $this->id;
     }
@@ -50,6 +57,9 @@ class Compra extends BaseDatos{
         $this->mensajeOperacion = $mensajeOperacion;
     }
 
+    /////////////////////////////
+    // INTERACCIÓN CON LA DB //
+    /////////////////////////////
 
     /**
      * Busca una compra por id.
@@ -58,7 +68,7 @@ class Compra extends BaseDatos{
      * @return boolean
      */
     public function buscar($id){
-        $res = false;
+        $encontro = false;
         $consulta = "SELECT * FROM compra WHERE idcompra = '" . $id . "'";
 
         if($this->Iniciar()){
@@ -67,16 +77,18 @@ class Compra extends BaseDatos{
                     $objUsuario = new Usuario();
                     $objUsuario->buscar($fila["idusuario"]);
 
-                    $this->cargar($fila["idcompra"],$fila["cofecha"],$objUsuario);
-                    $res = true;
+                    $this->cargar(
+                        $fila["idcompra"],
+                        $fila["cofecha"],
+                        $objUsuario
+                    );
+
+                    $encontro = true;
                 }
-            }else{
-                $this->setMensajeOperacion("compra->buscar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("compra->buscar: ".$this->getError());
-        }
-        return $res;
+            }else{$this->setMensajeOperacion("compra->buscar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("compra->buscar: ".$this->getError());}
+
+        return $encontro;
     }
 
     /**
@@ -100,12 +112,8 @@ class Compra extends BaseDatos{
                     $objCompra->buscar($fila["idcompra"]);
                     array_push($arreglo, $objCompra);
                 }
-            }else{
-                $this->setMensajeOperacion("compra->listar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("compra->listar: ".$this->getError());
-        }
+            }else{$this->setMensajeOperacion("compra->listar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("compra->listar: ".$this->getError());}
 
         return $arreglo;
     }
@@ -118,19 +126,16 @@ class Compra extends BaseDatos{
         $resp = null;
         $resultado = false;
 
-        $consulta = "INSERT INTO compra(cofecha, idusuario) VALUES (NOW(), ". $this->getObjUsuario()->getId() .");";
+        $consulta = "INSERT INTO compra(cofecha, idusuario)
+        VALUES (NOW(), ". $this->getObjUsuario()->getId() .");";
 
         if($this->Iniciar()){
             $resp = $this->Ejecutar($consulta);
             if ($resp) {
                 $this->setId($resp);
                 $resultado = true;
-            }else{
-                $this->setmensajeoperacion("compra->insertar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("compra->insertar: ".$this->getError());
-        }
+            }else{$this->setmensajeoperacion("compra->insertar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("compra->insertar: ".$this->getError());}
 
         return $resultado;
     }
@@ -140,21 +145,17 @@ class Compra extends BaseDatos{
      * @return boolean
      */
     public function modificar(){
-        $res = false;
+        $seConcreto = false;
 
         $consulta = "UPDATE compra SET idusuario = '" . $this->getObjUsuario()->getId() . "' WHERE idcompra = '" . $this->getId(). "'";
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
-                $res = true;
-            }else{
-                $this->setMensajeOperacion("compra->modificar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("compra->modificar: ".$this->getError());
-        }
+                $seConcreto = true;
+            }else{$this->setMensajeOperacion("compra->modificar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("compra->modificar: ".$this->getError());}
 
-        return $res;
+        return $seConcreto;
     }
 
     /**
@@ -162,29 +163,25 @@ class Compra extends BaseDatos{
      * @return boolean
      */
     public function eliminar(){
-        $res = false;
+        $seConcreto = false;
 
         $consulta = "DELETE FROM compra WHERE idcompra = '" . $this->getId() ."'";
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
-                $res = true;
-            }else{
-                $this->setMensajeOperacion("compra->eliminar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("compra->eliminar: ".$this->getError());
-        }
+                $seConcreto = true;
+            }else{$this->setMensajeOperacion("compra->eliminar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("compra->eliminar: ".$this->getError());}
 
-        return $res;
+        return $seConcreto;
     }
 
     /**
-     * Obtiene la compra activa del carrito
+     * Obtiene la compra activa en estado carrito
      * @return Compra|null
      */
-    public function buscarCompraCarrito(){
-        $objCompra = null;
+    public function buscarCarrito(){
+        $resultado = null;
 
         $consulta = "SELECT * FROM compra INNER JOIN compraestado ON compraestado.idcompra = compra.idcompra
         WHERE idusuario = ".$this->getObjUsuario()->getId() ." AND idcompraestadotipo = 1 AND cefechafin = '0000-00-00 00:00:00';";
@@ -192,17 +189,13 @@ class Compra extends BaseDatos{
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
                 if($fila = $this->Registro()){
-                    $objCompra = new Compra();
-                    $objCompra->buscar($fila["idcompra"]);
+                    $resultado = new Compra();
+                    $resultado->buscar($fila["idcompra"]);
                 }
-            }else{
-                $this->setMensajeOperacion("compra->buscarCompraCarrito: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("compra->buscarCompraCarrito: ".$this->getError());
-        }
+            }else{$this->setMensajeOperacion("compra->buscarCarrito: ".$this->getError());}
+        }else{$this->setMensajeOperacion("compra->buscarCarrito: ".$this->getError());}
 
-        return $objCompra;
+        return $resultado;
     }
 }
 ?>

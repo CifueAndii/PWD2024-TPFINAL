@@ -2,33 +2,62 @@
 class Producto extends BaseDatos{
     private $id;
     private $nombre;
+    private $proartista;
+    private $proprecio;
     private $detalle;
     private $cantStock;
+    private $protipo;
+    private $prodeshabilitado;
+    private $proimg;
     private $mensajeOperacion;
 
+    /////////////////////////////
+    // CONSTRUCTOR //
+    /////////////////////////////
+
     /**
-     * Método Constructor
+     * Constructor de la clase
      */
-    public function __construct(){
+    public function __construct()
+    {
         parent::__construct();
         $this->id = -1;
         $this->nombre = "";
+        $this->proartista = "";
+        $this->proprecio = 0;
         $this->detalle = "";
         $this->cantStock = 0;
+        $this->protipo = "";
+        $this->prodeshabilitado = null;
+        $this->proimg = "";
     }
+
+    /////////////////////////////
+    // SET Y GET //
+    /////////////////////////////
 
     /**
      * Carga datos al producto actual
      * @param int $id
      * @param string $nombre
+     * @param string $proartista
+     * @param float $proprecio
      * @param string $detalle
      * @param int $cantStock
+     * @param string $protipo
+     * @param timestamp|null $prodeshabilitado
+     * @param string $proimg
      */
-    public function cargar($id, $nombre, $detalle, $cantStock){
+    public function cargar($id, $nombre, $proartista, $proprecio, $detalle, $cantStock, $protipo, $prodeshabilitado, $proimg){
         $this->setId($id);
         $this->setNombre($nombre);
+        $this->setArtista($proartista);
+        $this->setPrecio($proprecio);
         $this->setDetalle($detalle);
         $this->setCantStock($cantStock);
+        $this->setTipo($protipo);
+        $this->setDeshabilitado($prodeshabilitado);
+        $this->setImg($proimg);
     }
 
     public function getId(){
@@ -43,6 +72,18 @@ class Producto extends BaseDatos{
     public function setNombre($nombre){
         $this->nombre = $nombre;
     }
+    public function getArtista(){
+        return $this->proartista;
+    }
+    public function setArtista($artista){
+        $this->proartista = $artista;
+    }
+    public function getPrecio(){
+        return $this->proprecio;
+    }
+    public function setPrecio($precio){
+        $this->proprecio = $precio;
+    }
     public function getDetalle(){
         return $this->detalle;
     }
@@ -55,12 +96,34 @@ class Producto extends BaseDatos{
     public function setCantStock($cantStock){
         $this->cantStock = $cantStock;
     }
+    public function getTipo(){
+        return $this->protipo;
+    }
+    public function setTipo($tipo){
+        $this->protipo = $tipo;
+    }
+    public function getDeshabilitado(){
+        return $this->prodeshabilitado;
+    }
+    public function setDeshabilitado($timestamp){
+        $this->prodeshabilitado = $timestamp;
+    }
+    public function getImg(){
+        return $this->proimg;
+    }
+    public function setImg($img){
+        $this->proimg = $img;
+    }
     public function getMensajeOperacion(){
         return $this->mensajeOperacion;
     }
     public function setMensajeOperacion($mensajeOperacion){
         $this->mensajeOperacion = $mensajeOperacion;
     }
+
+    /////////////////////////////
+    // INTERACCIÓN CON LA DB //
+    /////////////////////////////
 
     /**
      * Busca una producto por id.
@@ -69,23 +132,30 @@ class Producto extends BaseDatos{
      * @return boolean
      */
     public function buscar($id){
-        $resp = false;
+        $encontro = false;
         $consulta = "SELECT * FROM producto WHERE idproducto = '" . $id . "'";
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
                 if($fila = $this->Registro()){
-                    $this->cargar($fila["idproducto"],$fila["pronombre"],$fila["prodetalle"],$fila["procantstock"]);
-                    $resp = true;
-                }
-            }else{
-                $this->setMensajeOperacion("producto->buscar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("producto->buscar: ".$this->getError());
-        }
+                    $this->cargar(
+                        $fila["idproducto"],
+                        $fila["pronombre"],
+                        $fila["proartista"],
+                        $fila["proprecio"],
+                        $fila["prodetalle"],
+                        $fila["procantstock"],
+                        $fila["protipo"],
+                        $fila["prodeshabilitado"],
+                        $fila["proimg"]
+                    );
 
-        return $resp;
+                    $encontro = true;
+                }
+            }else{$this->setMensajeOperacion("producto->buscar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("producto->buscar: ".$this->getError());}
+
+        return $encontro;
     }
 
     /**
@@ -106,15 +176,22 @@ class Producto extends BaseDatos{
                 $arreglo = [];
                 while($fila = $this->Registro()){
                     $objProducto = new Producto();
-                    $objProducto->cargar($fila["idproducto"],$fila["pronombre"],$fila["prodetalle"],$fila["procantstock"]);
+                    $objProducto->cargar(
+                        $fila["idproducto"],
+                        $fila["pronombre"],
+                        $fila["proartista"],
+                        $fila["proprecio"],
+                        $fila["prodetalle"],
+                        $fila["procantstock"],
+                        $fila["protipo"],
+                        $fila["prodeshabilitado"],
+                        $fila["proimg"]
+                    );
+
                     array_push($arreglo, $objProducto);
                 }
-            }else{
-                $this->setMensajeOperacion("producto->listar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("producto->listar: ".$this->getError());
-        }
+            }else{$this->setMensajeOperacion("producto->listar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("producto->listar: ".$this->getError());}
 
         return $arreglo;
     }
@@ -125,24 +202,20 @@ class Producto extends BaseDatos{
      */
     public function insertar(){
         $resp = null;
-        $res = false;
+        $resultado = false;
 
-        $consulta = "INSERT INTO producto(pronombre, prodetalle, procantstock)
-        VALUES ('". $this->getNombre() ."','". $this->getDetalle() ."',". $this->getCantStock() .");";
+        $consulta = "INSERT INTO producto(pronombre, proartista, proprecio, prodetalle, procantstock, protipo, prodeshabilitado, proimg)
+        VALUES ('". $this->getNombre(). "','". $this->getArtista() . "',". $this->getPrecio() .",'". $this->getDetalle() ."',". $this->getCantStock() .",'" . $this->getTipo() . "'," . $this->getDeshabilitado() . ",'" .$this->getImg() ."');";
 
         if($this->Iniciar()){
             $resp = $this->Ejecutar($consulta);
-            if($resp){
+            if ($resp) {
                 $this->setId($resp);
-                $res = true;
-            }else{
-                $this->setmensajeoperacion("producto->insertar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("producto->insertar: ".$this->getError());
-        }
+                $resultado = true;
+            }else{$this->setmensajeoperacion("producto->insertar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("producto->insertar: ".$this->getError());}
 
-        return $res;
+        return $resultado;
     }
 
     /**
@@ -150,22 +223,26 @@ class Producto extends BaseDatos{
      * @return boolean
      */
     public function modificar(){
-        $resp = false;
+        $seConcreto = false;
+        $deshabilitado = $this->getDeshabilitado() ?? 'null';
 
-        $consulta = "UPDATE producto SET pronombre = '". $this->getNombre() ."', prodetalle = '". $this->getDetalle() ."',
-        procantstock = '". $this->getCantStock() ."' WHERE idproducto = '" . $this->getid(). "'";
+        $consulta = "UPDATE producto SET pronombre = '". $this->getNombre() ."',
+        proartista = '" . $this->getArtista() . "', 
+        proprecio =". $this->getPrecio(). ", 
+        prodetalle = '". $this->getDetalle() ."',
+        procantstock = ". $this->getCantStock() .",
+        protipo = '" . $this->getTipo() . "',
+        prodeshabilitado = " . $deshabilitado . ",
+        proimg = '" . $this->getImg() . "' 
+        WHERE idproducto = '" . $this->getid(). "'";
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
-                $resp = true;
-            }else{
-                $this->setMensajeOperacion("producto->modificar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("producto->modificar: ".$this->getError());
-        }
+                $seConcreto = true;
+            }else{$this->setMensajeOperacion("producto->modificar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("producto->modificar: ".$this->getError());}
 
-        return $resp;
+        return $seConcreto;
     }
 
     /**
@@ -173,21 +250,17 @@ class Producto extends BaseDatos{
      * @return boolean
      */
     public function eliminar(){
-        $resp = false;
+        $seConcreto = false;
 
         $consulta = "DELETE FROM producto WHERE idproducto = '" . $this->getId() ."'";
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
-                $resp = true;
-            }else{
-                $this->setMensajeOperacion("producto->eliminar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("producto->eliminar: ".$this->getError());
-        }
+                $seConcreto = true;
+            }else{$this->setMensajeOperacion("producto->eliminar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("producto->eliminar: ".$this->getError());}
 
-        return $resp;
+        return $seConcreto;
     }
 }
 

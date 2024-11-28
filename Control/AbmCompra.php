@@ -1,28 +1,8 @@
 <?php
+
 class AbmCompra{
-
     //Espera como parametro un arreglo asociativo donde las claves coinciden con las variables instancias del objeto
-    public function abm($datos){
-        $resp = false;
-        if($datos['accion']=='editar'){
-            if($this->modificacion($datos)){
-                $resp = true;
-            }
-        }
-        if($datos['accion']=='borrar'){
-            if($this->baja($datos)){
-                $resp =true;
-            }
-        }
-        if($datos['accion']=='nuevo'){
-            if($this->alta($datos)){
-                $resp =true;
-            }
-            
-        }
-        return $resp;
-    }
-
+    
     /**
      * Espera como parametro un arreglo asociativo donde las claves coinciden con los nombres de las variables instancias del objeto
      * @param array $param
@@ -34,10 +14,10 @@ class AbmCompra{
         if(array_key_exists('idusuario',$param)){
             $obj = new Compra();
 
-            $objUsuario = new Usuario;
-            $objUsuario->buscar($param["idusuario"]);
+            $objUs = new Usuario;
+            $objUs->buscar($param["idusuario"]);
         
-            $obj->cargar(null,"NOW()", $objUsuario);
+            $obj->cargar(null,"NOW()", $objUs);
         }
         return $obj;
     }
@@ -45,7 +25,7 @@ class AbmCompra{
     /**
      * Espera como parametro un arreglo asociativo donde las claves coinciden con los nombres de las variables instancias del objeto que son claves
      * @param array $param
-     * @return Compra|null
+     * @return Rol|null
      */
     private function cargarObjetoConClave($param){
         $obj = null;
@@ -76,15 +56,18 @@ class AbmCompra{
      * @param array $param
      */
     public function alta($param){
-        $resp = false;
+        $resp = array();
         $elObjtTabla = $this->cargarObjeto($param);
 
         if ($elObjtTabla!=null and $elObjtTabla->insertar()){
-            $resp = true;
+            $resp = array('resultado'=> true,'error'=>'', 'obj' => $elObjtTabla);
+        }else {
+            $resp = array('resultado'=> false,'error'=> $elObjtTabla->getMensajeOperacion());
         }
+    
         return $resp;
-    }
 
+    }
     /**
      * Permite eliminar un objeto
      * @param array $param
@@ -92,7 +75,7 @@ class AbmCompra{
      */
     public function baja($param){
         $resp = false;
-        if($this->seteadosCamposClaves($param)){
+        if ($this->seteadosCamposClaves($param)){
             $elObjtTabla = $this->cargarObjetoConClave($param);
             if ($elObjtTabla!=null and $elObjtTabla->eliminar()){
                 $resp = true;
@@ -126,14 +109,16 @@ class AbmCompra{
      */
     public function buscar($param){
         $where = " true ";
+        $claves = ["id","cofecha", "idusuario"];
+        $db = ["idcompra","cofecha", "idusuario"];
 
-        if($param<>NULL){
-            if(isset($param['id']))
-                $where.=" and idcompra =".$param['id'];
-            if(isset($param['cofecha']))
-                $where.=" and cofecha ='".$param['cofecha']."'";
-            if(isset($param['idusuario']))
-                $where.=" and idusuario ='".$param['idusuario']."'";
+
+        if ($param<>null){
+            for($i = 0; $i < count($claves); $i++){
+                if(isset($param[$claves[$i]])){
+                    $where.= " and " . $db[$i] . " = '". $param[$claves[$i]]  ."'";
+                }
+            }
         }
 
         $obj = new Compra();
@@ -147,64 +132,69 @@ class AbmCompra{
      * @return Compra|null
      */
     public function retornarCarrito($param){
-        $resp = null;
+        $resultado = null;
 
         if(isset($param["idusuario"])){
-            $objUsuario = new Usuario;
-            $objUsuario->buscar($param["idusuario"]);
+            $obj = new Usuario;
+            $obj->buscar($param["idusuario"]);
 
-            $objCompra = new Compra;
-            $objCompra->setObjUsuario($objUsuario);
-            $resp = $objCompra->buscarCompraCarrito();
+            $objCo = new Compra;
+            $objCo->setObjUsuario($obj);
+            $resultado = $objCo->buscarCarrito();
         }
 
-        return $resp;
+        return $resultado;
     }
 
     /**
-     * Ingresa el estado inicial de una compra
+     * busca el carrito de un usuario
      * @param array $param
-     * @return boolean
+     * @return Compra|null
      */
-    public function estadoInicial($param){
-        $resp = false;
-        $objCompra = $this->seteadosCamposClaves($param);
+    public function agregarCarrito($param){
+        $respuesta = false;
+        // Si no hay carrito, lo creo.
+        if(!isset($param["carrito"])){
+            $resultado = $this->alta($param);
+                if(isset($resultado)){
+                    $param["id"] = $resultado["obj"]->getId();
+                    // Crear estado
+                    $respuesta = $this->estadoInicial($param);
+                    $respuesta = true;
+                }
+        }else{
+            $param["id"] = $param["carrito"]->getId();
+            $respuesta = true;
+        }
 
-        if($objCompra){
-            $estadoCompra = 1;
-            $objCompraEstado = new CompraEstado;
-            $objCompraEstado->cargarClaves($param["id"], $estadoCompra);
+        $banderaItem = false;
 
-            if($objCompraEstado->insertar()){
-                $resp = true;
+        // Retorna un unico resultado o null
+        $item = $this->buscarItems($param);
+
+        if(isset($item) && $respuesta){
+            // Encontre producto igual
+            $param["idcompraitem"] = $item[0]->getId();
+            $param["cantidad"] = $item[0]->getCantidad() + $param["cantidad"];
+    
+            if($item[0]->getObjProducto()->getCantStock() >= $param["cantidad"]){
+                $respuesta = $this->modificarItem($param);
+                $banderaItem = true;
+            }
+        }elseif($respuesta){
+        // No encontre producto igual
+            if($param["producto"][0]->getCantStock() >= $param["cantidad"]){
+                $respuesta = $this->agregarItem($param);
+                $banderaItem = true;
             }
         }
-        return $resp;
+        $array["bandera"] = $banderaItem;
+        $array["respuesta"] = $respuesta;
+
+        return $array;
     }
 
-    //FUNCIONES DEL ESTADO DE UNA COMPRA
-
-    /**
-     * Busca el estado de una compra
-     * @param array $param
-     * @return array|null
-     */
-    public function buscarEstado($param){
-        $where = " true ";
-
-        if($param<>NULL){
-            if(isset($param['id']))
-                $where.=" and idcompra =".$param['id'];
-            if(isset($param['idcompraestadotipo']))
-                $where.=" and idcompraestadotipo ='".$param['idcompraestadotipo']."'";
-            if(isset($param['fechafin']))
-                $where.=" and cefechafin ='".$param['fechafin']."'";
-        }
-
-        $obj = new CompraEstado();
-        $arreglo = $obj->listar($where);
-        return $arreglo;
-    }
+    // Cambios de estado
 
     /**
      * Cambia el estado de una compra
@@ -213,11 +203,32 @@ class AbmCompra{
      */
     public function cambiarEstado($param){
         $resp = false;
-        $objCompra = $this->seteadosCamposClaves($param);
 
-        if($objCompra && isset($param["idcompraestadotipo"]) && $this->finalizarEstado($param)){
+        if($this->seteadosCamposClaves($param) && isset($param["idcompraestadotipo"]) && $this->finalizarEstado($param)){
             $objCompraEstado = new CompraEstado;
             $objCompraEstado->cargarClaves($param["id"],$param["idcompraestadotipo"]);
+
+            if($objCompraEstado->insertar()){
+                $resp = true;
+                enviarMail($param);
+            }
+        }
+        return $resp;
+    }
+
+    /**
+     * Agrega el estado inicial de una compra
+     * @param array $param
+     * @return boolean
+     */
+    public function estadoInicial($param){
+        $resp = false;
+
+        if($this->seteadosCamposClaves($param)){
+            $estadoInicial = 1;
+
+            $objCompraEstado = new CompraEstado;
+            $objCompraEstado->cargarClaves($param["id"], $estadoInicial);
 
             if($objCompraEstado->insertar()){
                 $resp = true;
@@ -227,38 +238,59 @@ class AbmCompra{
     }
 
     /**
-     * Finaliza el estado de una compra
+     * Finaliza el estado anterior
      * @param array $param
      * @return boolean
      */
     public function finalizarEstado($param){
         $resp = false;
-        $objCompra = $this->seteadosCamposClaves($param);
 
-        if($objCompra){
+        if($this->seteadosCamposClaves($param)){
+            // Revisar si existe una compra estado que estÃ© activa
             $objCompraEstado = new CompraEstado();
             $arreglo = $objCompraEstado->listar("idcompra = " . $param["id"] . " AND cefechafin = '0000-00-00 00:00:00'");
             
-            if(isset($arreglo) && count($arreglo) > 0 && $arreglo[0]->finalizarEstado()){
+            if(isset($arreglo) && count($arreglo) > 0 && $arreglo[0]->finalizar()){
                 $resp = true;
             }
         }
         return $resp;
+
     }
 
+    /**
+     * Dado el id de una compra, obtiene su estado
+     * @param array $param
+     * @return array|null
+     */
+    public function buscarEstado($param){
+        $where = " true ";
+        $claves = ["id", "idcompraestadotipo", "fechafin"];
+        $db = ["idcompra","idcompraestadotipo", "cefechafin"];
 
-    //FUNCIONES DEL ITEM DE UNA COMPRA
+
+        if ($param<>null){
+            for($i = 0; $i < count($claves); $i++){
+                if(isset($param[$claves[$i]])){
+                    $where.= " and " . $db[$i] . " = '". $param[$claves[$i]]  ."'";
+                }
+            }
+        }
+
+        $obj = new CompraEstado();
+        $arreglo = $obj->listar($where);
+        return $arreglo;
+    }
 
     /**
-     * Agrega un Item a una compra
+     * Agrega un item
      * @param array
      * @return boolean
      */
     public function agregarItem($param){
         $resp = false;
-        $objCompra = $this->seteadosCamposClaves($param);
 
-        if($objCompra && isset($param["idproducto"]) && isset($param["cantidad"])){
+        if($this->seteadosCamposClaves($param) && isset($param["idproducto"]) && isset($param["cantidad"])){
             $objCompraItem = new CompraItem();
             $objCompraItem->cargarClaves($param["id"], $param["idproducto"]);
             $objCompraItem->setCantidad($param["cantidad"]);
@@ -270,7 +302,7 @@ class AbmCompra{
     }
 
     /**
-     * Modifica un Item de la compra
+     * Modifica un item
      * @param array
      * @return boolean
      */
@@ -289,7 +321,7 @@ class AbmCompra{
     }
 
     /**
-     * Elimina un Item de la compra
+     * Elimina un item
      * @param array
      * @return boolean
      */
@@ -308,20 +340,22 @@ class AbmCompra{
     }
 
     /**
-     * Retorna todos los Items de la compra
+     * Retorna todos sus obj item
      * @param array $param
      * @return array|null
      */
     public function buscarItems($param){
         $where = " true ";
+        $claves = ["id", "idcompraitem", "idproducto"];
+        $db = ["idcompra", "idcompraitem", "idproducto"];
 
-        if($param<>NULL){
-            if(isset($param['id']))
-                $where.=" and idcompra =".$param['id'];
-            if(isset($param['idcompraitem']))
-                $where.=" and idcompraitem ='".$param['idcompraitem']."'";
-            if(isset($param['idproducto']))
-                $where.=" and idproducto ='".$param['idproducto']."'";
+
+        if ($param<>null){
+            for($i = 0; $i < count($claves); $i++){
+                if(isset($param[$claves[$i]])){
+                    $where.= " and " . $db[$i] . " = '". $param[$claves[$i]]  ."'";
+                }
+            }
         }
 
         $obj = new CompraItem();
@@ -329,30 +363,189 @@ class AbmCompra{
         return $arreglo;
     }
 
-    /**Cambia de estado todas las variables relacionadas a concretar un pago
-     * @param array $param
-     * @return boolean
+    /**
+     * 
      */
-    public function pago($param){
-        $res = false;
+    public function accionPago($param){
+        $resultado = false;
     
-        $param["idcompraestadotipo"] = 2;
-        $resp = $this->cambiarEstado($param);
+        // Cambio de estado de la compra a "iniciada"
+        $param["idcompraestadotipo"] = 2; // iniciada
+        $resultado = $this->cambiarEstado($param);
     
-        if($resp){
+        if ($resultado) {
             $abmProducto = new AbmProducto();
-            $items = $this->buscarItems($param);
     
-            if(isset($items)){
-                foreach($items as $item){
-                    $abmProducto->cambiarStock(["id" => $item->getObjProducto()->getId(),"cantidad" => $item->getCantidad(),"operacion" => "resta"]);
+            $list = $this->buscarItems($param);
+    
+            if (isset($list)) {
+                foreach ($list as $item) {
+                    $abmProducto->cambiarStock([
+                        "id" => $item->getObjProducto()->getId(),
+                        "cantidad" => $item->getCantidad(),
+                        "operacion" => "resta"
+                    ]);
                 }
-                $res = true;
             }
+
         }
     
-        return $res;
+        return $resultado;
     }
+
+    public function cancelarCompra($param){
+        $resp = false;
+        
+        if ($this->cambiarEstado($param)){
+            $resp = true;
+
+            $abmProducto = new AbmProducto;
+
+            $list = $this->buscarItems($param);
+
+            if(isset($list)){
+                foreach($list as $item){
+                $abmProducto->cambiarStock(["idproducto" => $item->getObjProducto()->getId(),"cantidad" => $item->getCantidad(),"operacion" => "suma"]);
+                }   
+            }
+        }
+
+        return $resp;
+    }
+
+    public function listarPedidosVigentes()
+    {
+        $list = $this->buscarEstado(["fechafin" => '0000-00-00 00:00:00']);
+
+        $arreglo_salida = array();
+
+        if (isset($list) && count($list) > 0) {
+            foreach ($list as $elem) {
+                if ($elem->getObjCompraEstadoTipo()->getIdcet() != 1) {
+                    $nuevoElem["id"] = $elem->getObjCompra()->getId();
+
+                    $nuevoElem["productos"] = "";
+                    $items = $this->buscarItems(["id" => $nuevoElem["id"]]);
+
+                    $nuevoElem["usuario"] = $elem->getObjCompra()->getObjUsuario()->getNombre();
+
+                    if (isset($items) && count($items) > 0) {
+                        $nuevoElem["productos"] .= "<ul>";
+                        foreach ($items as $item) {
+                            $nuevoElem["productos"] .=
+                            '<li>
+                        ' .  mb_strimwidth($item->getObjProducto()->getNombre(), 0, 20, "...") . 'x ' . $item->getCantidad() . '
+                        </li>';
+                        }
+                        $nuevoElem["productos"] .= "</ul>";
+                    }
+
+
+                    $nuevoElem["fecha"] = $elem->getObjCompra()->getCoFecha();
+
+                    $nuevoElem["estado"] = "";
+
+                    $nuevoElem["estadofecha"] = $elem->getFechaIni();
+
+
+                    $nuevoElem["estado"] .= '<span class="badge rounded-pill text-bg-primary mx-1" id="' . $nuevoElem["id"] . '-' . $elem->getObjCompraEstadoTipo()->getIdcet() . '">
+                    ' . $elem->getObjCompraEstadoTipo()->getCetdescripcion() . "</span>";
+
+                    $nuevoElem["estadoid"] = $elem->getObjCompraEstadoTipo()->getIdcet();
+
+                    $nuevoElem["accion"] = "";
+                    if ($nuevoElem["estadoid"] != 5) {
+                        $nuevoElem["accion"] =
+                            '<button class="btn btn-warning" id="edit-' . $nuevoElem["id"] . '" onclick="editMenu();">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                            <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                            <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
+                        </svg>
+                        </button>
+                        <button class="btn btn-danger borrado" id="delete-' . $nuevoElem["id"] . '" onclick="destroyMenu();">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle-fill" viewBox="0 0 16 16">
+                                <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/>
+                            </svg>
+                        </button>';
+                    }
+
+                    if ($nuevoElem["estadoid"] == 4) {
+                        $nuevoElem["accion"] =
+                            '
+                        <button class="btn btn-danger borrado" id="delete-' . $nuevoElem["id"] . '" onclick="destroyMenu();">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle-fill" viewBox="0 0 16 16">
+                                <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/>
+                            </svg>
+                        </button>';
+                    }
+
+                    array_push($arreglo_salida, $nuevoElem);
+                }
+            }
+        }
+
+        return $arreglo_salida;
+    }
+
+
+    public function listarPedidosUsuario($param)
+    {
+
+
+        $list = $this->buscar($param);
+
+        $arreglo_salida =  array();
+
+        if (isset($list) && count($list) > 0) {
+            foreach ($list as $elem) {
+                $nuevoElem["id"] = $elem->getId();
+
+                $nuevoElem["productos"] = "";
+                $items = $this->buscarItems(["id" => $elem->getId()]);
+
+                if (isset($items) && count($items) > 0
+                ) {
+                    $nuevoElem["productos"] .= "<ul>";
+                    foreach ($items as $item) {
+                        $nuevoElem["productos"] .=
+                        '<li>
+                ' .  mb_strimwidth($item->getObjProducto()->getNombre(), 0, 20, "...") . 'x ' . $item->getCantidad() . '
+                </li>';
+                    }
+                    $nuevoElem["productos"] .= "</ul>";
+                }
+
+                $nuevoElem["fecha"] = $elem->getCoFecha();
+
+                $nuevoElem["estado"] = "";
+                $estado = $this->buscarEstado(["id" => $elem->getId(), "fechafin" => "0000/00/00 00:00"]);
+
+                if ($estado[0]->getObjCompraEstadoTipo()->getIdcet() == 2) {
+                    $nuevoElem["accion"] =
+                    '<button class="btn btn-danger borrado" id="delete-' . $elem->getId() . '" onclick="destroyMenu();">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle-fill" viewBox="0 0 16 16">
+                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/>
+                </svg>
+            </button>';
+                } else {
+                    $nuevoElem["accion"] =
+                    '<button class="btn btn-danger borrado disabled">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle-fill" viewBox="0 0 16 16">
+                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/>
+                </svg>
+            </button>';
+                }
+
+                $nuevoElem["estado"] .= '<span class="badge rounded-pill text-bg-primary mx-1" id="' . $elem->getId() . '-' . $estado[0]->getObjCompraEstadoTipo()->getIdcet() . '">
+                    ' . $estado[0]->getObjCompraEstadoTipo()->getCetdescripcion() . "</span>";
+
+                array_push($arreglo_salida, $nuevoElem);
+            }
+        }
+
+        return $arreglo_salida;
+    }
+
 }
 
 

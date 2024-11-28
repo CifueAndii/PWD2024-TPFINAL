@@ -6,10 +6,15 @@ class CompraItem extends BaseDatos{
     private $cantidad;
     private $mensajeOperacion;
 
+    /////////////////////////////
+    // CONSTRUCTOR //
+    /////////////////////////////
+
     /**
      * Método constructor
      */
-    public function __construct(){
+    public function __construct()
+    {
         parent::__construct();
         $this->id = -1;
         $this->objCompra = new Compra();
@@ -17,6 +22,10 @@ class CompraItem extends BaseDatos{
         $this->cantidad = null;
         $this->mensajeOperacion = null;
     }
+
+    /////////////////////////////
+    // SET Y GET //
+    /////////////////////////////
 
     /**
      * Carga datos a un objeto
@@ -27,9 +36,8 @@ class CompraItem extends BaseDatos{
         $this->setObjCompra($objCompra);
         $this->setCantidad($cantidad);
     }
-
     /**
-     * Carga claves del objeto CompraItem
+     * Carga claves al objeto
      * @param int $idCompra
      * @param int $idUsuario
      */
@@ -43,7 +51,6 @@ class CompraItem extends BaseDatos{
         $this->setObjCompra($objCompra);
         $this->setObjProducto($objProducto);
     }
-
     public function getId(){
         return $this->id;
     }
@@ -75,6 +82,9 @@ class CompraItem extends BaseDatos{
         $this->mensajeOperacion = $mensajeOperacion;
     }
 
+    /////////////////////////////
+    // INTERACCIÓN CON LA DB //
+    /////////////////////////////
 
     /**
      * Busca un item por id.
@@ -83,7 +93,7 @@ class CompraItem extends BaseDatos{
      * @return boolean
      */
     public function buscar($id){
-        $resp = false;
+        $encontro = false;
         $consulta = "SELECT * FROM compraitem WHERE idcompraitem = '" . $id . "'";
 
         if($this->Iniciar()){
@@ -95,18 +105,19 @@ class CompraItem extends BaseDatos{
                     $objCompra = new Compra();
                     $objCompra->buscar($fila["idcompra"]);
 
-                    $this->cargar($fila["idcompraitem"],$objProducto,$objCompra,$fila["cicantidad"]);
+                    $this->cargar(
+                        $fila["idcompraitem"],
+                        $objProducto,
+                        $objCompra,
+                        $fila["cicantidad"]
+                    );
 
-                    $resp = true;
+                    $encontro = true;
                 }
-            }else{
-                $this->setMensajeOperacion("compraitem->buscar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("compraitem->buscar: ".$this->getError());
-        }
+            }else{$this->setMensajeOperacion("compraitem->buscar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("compraitem->buscar: ".$this->getError());}
 
-        return $resp;
+        return $encontro;
     }
 
     /**
@@ -130,12 +141,8 @@ class CompraItem extends BaseDatos{
                     $objCompraItem->buscar($fila["idcompraitem"]);
                     array_push($arreglo, $objCompraItem);
                 }
-            }else{
-                $this->setMensajeOperacion("compraitem->listar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("compraitem->listar: ".$this->getError());
-        }
+            }else{$this->setMensajeOperacion("compraitem->listar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("compraitem->listar: ".$this->getError());}
 
         return $arreglo;
     }
@@ -146,7 +153,7 @@ class CompraItem extends BaseDatos{
      */
     public function insertar(){
         $resp = null;
-        $res = false;
+        $resultado = false;
 
         $consulta = "INSERT INTO compraitem(idproducto, idcompra, cicantidad)
         VALUES ('".$this->getObjProducto()->getId()."','". $this->getObjCompra()->getId() ."','". $this->getCantidad()  . "');";
@@ -155,15 +162,11 @@ class CompraItem extends BaseDatos{
             $resp = $this->Ejecutar($consulta);
             if ($resp) {
                 $this->setId($resp);
-                $res = true;
-            }else{
-                $this->setmensajeoperacion("compraitem->insertar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("compraitem->insertar: ".$this->getError());
-        }
+                $resultado = true;
+            }else{$this->setmensajeoperacion("compraitem->insertar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("compraitem->insertar: ".$this->getError());}
 
-        return $res;
+        return $resultado;
     }
 
     /**
@@ -171,21 +174,17 @@ class CompraItem extends BaseDatos{
      * @return boolean
      */
     public function modificar(){
-        $resp = false;
+        $seConcreto = false;
 
         $consulta = "UPDATE compraitem SET cicantidad = '". $this->getCantidad() . "'  WHERE idcompraitem = '" . $this->getId(). "'";
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
-                $resp = true;
-            }else{
-                $this->setMensajeOperacion("compraitem->modificar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("compraitem->modificar: ".$this->getError());
-        }
+                $seConcreto = true;
+            }else{$this->setMensajeOperacion("compraitem->modificar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("compraitem->modificar: ".$this->getError());}
 
-        return $resp;
+        return $seConcreto;
     }
 
     /**
@@ -193,21 +192,17 @@ class CompraItem extends BaseDatos{
      * @return boolean
      */
     public function eliminar(){
-        $resp = false;
+        $seConcreto = false;
 
         $consulta = "DELETE FROM compraitem WHERE idcompraitem = '" . $this->getId() ."'";
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
-                $resp = true;
-            }else{
-                $this->setMensajeOperacion("compraitem->eliminar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("compraitem->eliminar: ".$this->getError());
-        }
+                $seConcreto = true;
+            }else{$this->setMensajeOperacion("compraitem->eliminar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("compraitem->eliminar: ".$this->getError());}
 
-        return $resp;
+        return $seConcreto;
     }
 }
 ?>

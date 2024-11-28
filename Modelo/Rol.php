@@ -4,15 +4,24 @@ class Rol extends BaseDatos{
     private $rolDescripcion;
     private $mensajeOperacion;
 
+    /////////////////////////////
+    // CONSTRUCTOR //
+    /////////////////////////////
+
     /**
-     * Método Constructor
+     * Clase constructora
      */
-    public function __construct(){
+    public function __construct()
+    {
         parent::__construct();
         $this->id = null;
         $this->rolDescripcion = null;
         $this->mensajeOperacion = null;
     }
+
+    /////////////////////////////
+    // SET Y GET //
+    /////////////////////////////
 
     /**
      * Carga datos al objeto
@@ -23,7 +32,6 @@ class Rol extends BaseDatos{
         $this->setId($id);
         $this->setRolDescripcion($rolDescripcion);
     }
-
     public function getId(){
         return $this->id;
     }
@@ -43,6 +51,9 @@ class Rol extends BaseDatos{
         $this->mensajeOperacion = $mensajeOperacion;
     }
 
+    /////////////////////////////
+    // INTERACCIÓN CON LA DB //
+    /////////////////////////////
 
     /**
      * Busca un rol por id
@@ -51,23 +62,23 @@ class Rol extends BaseDatos{
      * @return boolean true si encontro, false caso contrario
      */
     public function buscar($id){
-        $resp = false;
+        $encontro = false;
         $consulta = "SELECT * FROM rol WHERE idrol = '" . $id . "'";
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
                 if($fila = $this->Registro()){
-                    $this->cargar($id,$fila["roldescripcion"]);
-                    $resp = true;
-                }
-            }else{
-                $this->setMensajeOperacion("rol->buscar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("rol->buscar: ".$this->getError());
-        }
+                    $this->cargar(
+                        $id,
+                        $fila["roldescripcion"]
+                    );
 
-        return $resp;
+                    $encontro = true;
+                }
+            }else{$this->setMensajeOperacion("rol->buscar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("rol->buscar: ".$this->getError());}
+
+        return $encontro;
     }
 
     /**
@@ -91,12 +102,8 @@ class Rol extends BaseDatos{
                     $objRol->cargar($fila["idrol"],$fila["roldescripcion"]);
                     array_push($arreglo, $objRol);
                 }
-            }else{
-                $this->setMensajeOperacion("rol->listar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("rol->listar: ".$this->getError());
-        }
+            }else{$this->setMensajeOperacion("rol->listar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("rol->listar: ".$this->getError());}
 
         return $arreglo;
     }
@@ -107,23 +114,20 @@ class Rol extends BaseDatos{
      */
     public function insertar(){
         $resp = null;
-        $res = false;
+        $resultado = false;
 
-        $consulta = "INSERT INTO rol(roldescripcion) VALUES ('". $this->getRolDescripcion()."');";
+        $consulta = "INSERT INTO rol(roldescripcion)
+        VALUES ('". $this->getRolDescripcion()."');";
 
         if($this->Iniciar()){
             $resp = $this->Ejecutar($consulta);
-            if($resp){
+            if ($resp) {
                 $this->setId($resp);
-                $res = true;
-            }else{
-                $this->setmensajeoperacion("rol->insertar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("rol->insertar: ".$this->getError());
-        }
+                $resultado = true;
+            }else{$this->setmensajeoperacion("rol->insertar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("rol->insertar: ".$this->getError());}
 
-        return $res;
+        return $resultado;
     }
 
     /**
@@ -131,21 +135,17 @@ class Rol extends BaseDatos{
      * @return boolean true si se concretó, false caso contrario
      */
     public function modificar(){
-        $resp = false;
+        $seConcreto = false;
 
         $consulta = "UPDATE rol SET roldescripcion = '" . $this->getRolDescripcion() . "' WHERE idrol = '" . $this->getId(). "'";
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
-                $resp = true;
-            }else{
-                $this->setMensajeOperacion("rol->modificar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("rol->modificar: ".$this->getError());
-        }
+                $seConcreto = true;
+            }else{$this->setMensajeOperacion("rol->modificar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("rol->modificar: ".$this->getError());}
 
-        return $resp;
+        return $seConcreto;
     }
 
     /**
@@ -153,21 +153,17 @@ class Rol extends BaseDatos{
      * @return boolean true si se concretó, false caso contrario
      */
     public function eliminar(){
-        $resp = false;
+        $seConcreto = false;
 
         $consulta = "DELETE FROM rol WHERE idrol = '" . $this->getId() ."'";
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
-                $resp = true;
-            }else{
-                $this->setMensajeOperacion("rol->eliminar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("rol->eliminar: ".$this->getError());
-        }
+                $seConcreto = true;
+            }else{$this->setMensajeOperacion("rol->eliminar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("rol->eliminar: ".$this->getError());}
 
-        return $resp;
+        return $seConcreto;
     }
 }
 

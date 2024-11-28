@@ -4,7 +4,8 @@ class Session{
      * Clase constructor
      * @return boolean
      */
-    public function __construct(){
+    public function __construct()
+    {
         $resp = false;
         if(session_start()){
             $resp = true;
@@ -18,22 +19,18 @@ class Session{
      * @param string $psw
      * @return array
      */
-    public function iniciar($nombreUsuario,$psw){
+    public function iniciar($nombreUsuario, $psw){
         $resp = false;
-        $objAbmUsuario = new AbmUsuario();
 
-        $param['usnombre'] = $nombreUsuario;
-        $param['uspass'] = $psw;
-        $param['usdeshabilitado'] = "0000-00-00 00:00:00";
+        $where = ["nombre" => $nombreUsuario, "pass" => $psw, "deshabilitado" => "0000-00-00 00:00:00"];
+        $abmUsuario = new AbmUsuario();
+        $arreglo = $abmUsuario->buscar($where);
 
-        $res = $objAbmUsuario->buscar($param);
-        if(count($res) > 0){
-            $objUsuario = $res[0];
-            $_SESSION['idusuario'] = $objUsuario->getId();
+        if(!is_null($arreglo)){
+            $_SESSION["idusuario"] = $arreglo[0]->getId();
             $resp = true;
-        }else{
-            $this->cerrar();
         }
+
         return $resp;
     }
 
@@ -46,7 +43,6 @@ class Session{
         if($this->activa() && isset($_SESSION["idusuario"])){
             $resp = true;
         }
-
         return $resp;
     }
 
@@ -68,16 +64,15 @@ class Session{
      * @return Usuario
      */
     public function getUsuario(){
-        $objUsuario = null;
-        if($this->validar()){
-            $objAbmUsuario = new AbmUsuario();
-            $param['idusuario'] = $_SESSION['idusuario'];
-            $res = $objAbmUsuario->buscar($param);
-            if(count($res) > 0){
-                $objUsuario = $res[0];
-            }
-        }
-        return $objUsuario;
+        $objResultado = null;
+
+        $abmUsuario = new AbmUsuario();
+        $where = ["id" => $_SESSION["idusuario"]];
+        $arreglo = $abmUsuario->buscar($where);
+
+        $objResultado = $arreglo[0];
+
+        return $objResultado;
     }
 
     /**
@@ -87,14 +82,14 @@ class Session{
     public function getRol(){
         $_SESSION["roles"] = array();
 
-        if($this->validar()){
-            $abmUsuario = new AbmUsuario();
-            $param['idusuario'] = $_SESSION['idusuario'];
-            $res = $abmUsuario->buscarRoles($param);
-            foreach($res as $rol){
-                array_push($_SESSION["roles"], $rol->getObjRol()->getRolDescripcion());
-            }
+        $where = ["id" => $_SESSION["idusuario"]];
+        $abmUsuario = new AbmUsuario();
+        $arregloObjRoles = $abmUsuario->buscarRoles($where);
+
+        foreach($arregloObjRoles as $rol){
+            array_push($_SESSION["roles"], $rol->getObjRol()->getRolDescripcion());
         }
+
         return $_SESSION["roles"];
     }
 
@@ -123,9 +118,10 @@ class Session{
      * Cierra la sesión actual
      */
     public function cerrar(){
-        $resp = true;
+        session_unset();
         session_destroy();
-        return $resp;
     }
 }
+
+
 ?>

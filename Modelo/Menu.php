@@ -3,14 +3,19 @@ class Menu extends BaseDatos{
     private $id;
     private $nombre;
     private $descripcion;
-    private $objMenuPadre;
+    private $objMenuPadre; // Si no tiene padre, el obj tiene id -1
     private $deshabilitado;
     private $mensajeOperacion;
+    
+    /////////////////////////////
+    // CONSTRUCTOR //
+    /////////////////////////////
 
     /**
      * Método constructor
      */
-    public function __construct(){
+    public function __construct()
+    {
         parent::__construct();
         $this->id = -1;
         $this->nombre = "";
@@ -18,8 +23,12 @@ class Menu extends BaseDatos{
         $this->deshabilitado = "";
     }
 
+    /////////////////////////////
+    // SET Y GET //
+    /////////////////////////////
+
     /**
-     * Carga datos al objeto Menu
+     * Carga datos al obj
      * @param int $id
      * @param string $nombre
      * @param string $descripcion
@@ -71,12 +80,16 @@ class Menu extends BaseDatos{
         $this->mensajeOperacion = $mensajeOperacion;
     }
 
+    /////////////////////////////
+    // INTERACCION CON LA DB //
+    /////////////////////////////
+
     /**
      * Busca en la db por clave primaria
      * @param int $id
      */
     public function buscar($id){
-        $resp = false;
+        $encontro = false;
         $consulta = "SELECT * FROM menu WHERE idmenu = '" . $id . "'";
 
         if($this->Iniciar()){
@@ -89,18 +102,20 @@ class Menu extends BaseDatos{
                         $objMenuPadre->buscar($fila["idpadre"]);
                     }
 
-                    $this->cargar($fila["idmenu"],$fila["menombre"],$fila["medescripcion"],$objMenu,$fila["medeshabilitado"]);
+                    $this->cargar(
+                        $fila["idmenu"],
+                        $fila["menombre"],
+                        $fila["medescripcion"],
+                        $objMenu,
+                        $fila["medeshabilitado"]
+                    );
 
-                    $resp = true;
+                    $encontro = true;
                 }
-            }else{
-                $this->setMensajeOperacion("menu->buscar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("menu->buscar: ".$this->getError());
-        }
+            }else{$this->setMensajeOperacion("menu->buscar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("menu->buscar: ".$this->getError());}
 
-        return $resp;
+        return $encontro;
     }
 
     /**
@@ -126,15 +141,16 @@ class Menu extends BaseDatos{
                         $objMenuPadre = new Menu;
                         $objMenuPadre->buscar($fila["idpadre"]);
                     }
-                    $objMenu->cargar($fila["idmenu"],$fila["menombre"],$fila["medescripcion"],$objMenuPadre,$fila["medeshabilitado"]);
+                    $objMenu->cargar(
+                        $fila["idmenu"],
+                        $fila["menombre"],
+                        $fila["medescripcion"],
+                        $objMenuPadre,
+                        $fila["medeshabilitado"]);
                     array_push($arreglo, $objMenu);
                 }
-            }else{
-                $this->setMensajeOperacion("menu->listar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("menu->listar: ".$this->getError());
-        }
+            }else{$this->setMensajeOperacion("menu->listar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("menu->listar: ".$this->getError());}
 
         return $arreglo;
     }
@@ -145,34 +161,28 @@ class Menu extends BaseDatos{
      */
     public function insertar(){
         $resp = null;
-        $res = false;
-        $menuPadre[0] = ",";
-        $menuPadre[1] = ",";
+        $resultado = false;
+        $padre[0] = ",";
+        $padre[1] = ",";
 
         if($this->getObjMenuPadre() != null && $this->getObjMenuPadre()->getId() != -1){
-            $menuPadre[0] = ",idpadre,";
-            $menuPadre[1] = ",idpadre = '". $this->getObjMenuPadre()->getId() . "',";
+            $padre[0] = ",idpadre,";
+            $padre[1] = ",idpadre = '". $this->getObjMenuPadre()->getId() . "',";
         }
 
-        $consulta = "INSERT INTO menu(menombre, medescripcion". $menuPadre[0] ."medeshabilitado)
-        VALUES ('" . $this->getNombre() . "', '". $this->getDescripcion() ."'". $menuPadre[1] ."
+        $consulta = "INSERT INTO menu(menombre, medescripcion". $padre[0] ."medeshabilitado)
+        VALUES ('" . $this->getNombre() . "', '". $this->getDescripcion() ."'". $padre[1] ."
         '". $this->getDeshabilitado() ."');";
-
-        echo $consulta;
 
         if($this->Iniciar()){
             $resp = $this->Ejecutar($consulta);
             if ($resp) {
                 $this->setId($resp);
-                $res = true;
-            }else{
-                $this->setMensajeOperacion("menu->insertar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("menu->insertar: ".$this->getError());
-        }
+                $resultado = true;
+            }else{$this->setMensajeOperacion("menu->insertar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("menu->insertar: ".$this->getError());}
 
-        return $res;
+        return $resultado;
     }
 
     /**
@@ -180,7 +190,7 @@ class Menu extends BaseDatos{
      * @return boolean
      */
     public function modificar(){
-        $resp = false;
+        $seConcreto = false;
         $padre = ",";
 
         if($this->getObjMenuPadre() != null && $this->getObjMenuPadre()->getId() != -1){
@@ -188,19 +198,16 @@ class Menu extends BaseDatos{
         }
 
         $consulta = "UPDATE menu SET menombre = '". $this->getNombre() ."', medescripcion = '". $this->getDescripcion() ."'
-        ". $padre ." medeshabilitado = ".$this->getDeshabilitado()." WHERE idmenu = '" . $this->getId(). "'";
+        ". $padre ." medeshabilitado = ".$this->getDeshabilitado()."
+        WHERE idmenu = '" . $this->getId(). "'";
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
-                $resp = true;
-            }else{
-                $this->setMensajeOperacion("menu->modificar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("menu->modificar: ".$this->getError());
-        }
+                $seConcreto = true;
+            }else{$this->setMensajeOperacion("menu->modificar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("menu->modificar: ".$this->getError());}
 
-        return $resp;
+        return $seConcreto;
     }
 
     /**
@@ -208,21 +215,17 @@ class Menu extends BaseDatos{
      * @return boolean
      */
     public function eliminar(){
-        $resp = false;
+        $seConcreto = false;
 
         $consulta = "DELETE FROM menu WHERE idmenu = '" . $this->getId() ."'";
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
-                $resp = true;
-            }else{
-                $this->setMensajeOperacion("menu->eliminar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("menu->eliminar: ".$this->getError());
-        }
+                $seConcreto = true;
+            }else{$this->setMensajeOperacion("menu->eliminar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("menu->eliminar: ".$this->getError());}
 
-        return $resp;
+        return $seConcreto;
     }
 }
 

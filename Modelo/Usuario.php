@@ -7,10 +7,15 @@ class Usuario extends BaseDatos{
     private $deshabilitado;
     private $mensajeOperacion;
 
+    /////////////////////////////
+    // CONSTRUCTOR //
+    /////////////////////////////
+
     /**
-     * Método Constructor
+     * Clase constructora
      */
-    public function __construct(){
+    public function __construct()
+    {
         parent::__construct();
         $this->id = null;
         $this->nombre = null;
@@ -19,6 +24,10 @@ class Usuario extends BaseDatos{
         $this->deshabilitado = null;
         $this->mensajeOperacion = null;
     }
+
+    /////////////////////////////
+    // SET Y GET //
+    /////////////////////////////
 
     /**
      * Carga datos al objeto
@@ -35,8 +44,6 @@ class Usuario extends BaseDatos{
         $this->setMail($mail);
         $this->setDeshabilitado($deshabilitado);
     }
-
-
     public function getId(){
         return $this->id;
     }
@@ -75,6 +82,10 @@ class Usuario extends BaseDatos{
     }
 
 
+    /////////////////////////////
+    // INTERACCIÓN CON LA DB //
+    /////////////////////////////
+
     /**
      * Busca un usuario por id
      * Sus datos son colocados en el objeto
@@ -82,23 +93,26 @@ class Usuario extends BaseDatos{
      * @return boolean true si encontro, false caso contrario
      */
     public function buscar($id){
-        $resp = false;
+        $encontro = false;
         $consulta = "SELECT * FROM usuario WHERE idusuario = '" . $id . "'";
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
                 if($fila = $this->Registro()){
-                    $this->cargar($id,$fila["usnombre"],$fila["uspass"],$fila["usmail"],$fila["usdeshabilitado"]);
-                    $resp = true;
-                }
-            }else{
-                $this->setMensajeOperacion("usuario->buscar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("usuario->buscar: ".$this->getError());
-        }
+                    $this->cargar(
+                        $id,
+                        $fila["usnombre"],
+                        $fila["uspass"],
+                        $fila["usmail"],
+                        $fila["usdeshabilitado"]
+                    );
 
-        return $resp;
+                    $encontro = true;
+                }
+            }else{$this->setMensajeOperacion("usuario->buscar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("usuario->buscar: ".$this->getError());}
+
+        return $encontro;
     }
 
     /**
@@ -119,15 +133,17 @@ class Usuario extends BaseDatos{
                 $arreglo = [];
                 while($fila = $this->Registro()){
                     $objUsuario = new Usuario();
-                    $objUsuario->cargar($fila["idusuario"],$fila["usnombre"],$fila["uspass"],$fila["usmail"],$fila["usdeshabilitado"]);
+                    $objUsuario->cargar(
+                        $fila["idusuario"],
+                        $fila["usnombre"],
+                        $fila["uspass"],
+                        $fila["usmail"],
+                        $fila["usdeshabilitado"]
+                    );
                     array_push($arreglo, $objUsuario);
                 }
-            }else{
-                $this->setMensajeOperacion("usuario->listar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("usuario->listar: ".$this->getError());
-        }
+            }else{$this->setMensajeOperacion("usuario->listar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("usuario->listar: ".$this->getError());}
 
         return $arreglo;
     }
@@ -138,24 +154,21 @@ class Usuario extends BaseDatos{
      */
     public function insertar(){
         $resp = null;
-        $res = false;
+        $resultado = false;
 
         $consulta = "INSERT INTO usuario(usnombre, uspass, usmail, usdeshabilitado)
-        VALUES ('". $this->getNombre()."','".$this->getPass()."','".$this->getMail()."', '". $this->getDeshabilitado() . "');";
+        VALUES ('". $this->getNombre()."','".$this->getPass()."','".$this->getMail()."',
+        '". $this->getDeshabilitado() . "');";
 
         if($this->Iniciar()){
             $resp = $this->Ejecutar($consulta);
             if ($resp) {
                 $this->setId($resp);
-                $res = true;
-            }else{
-                $this->setmensajeoperacion("usuario->insertar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("usuario->insertar: ".$this->getError());
-        }
+                $resultado = true;
+            }else{$this->setmensajeoperacion("usuario->insertar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("usuario->insertar: ".$this->getError());}
 
-        return $res;
+        return $resultado;
     }
 
     /**
@@ -163,27 +176,26 @@ class Usuario extends BaseDatos{
      * @return boolean true si se concretó, false caso contrario
      */
     public function modificar(){
-        $resp = false;
+        $seConcreto = false;
         $pass = "";
+
         
-        /*if($this->getPass() != NULL && $this->getPass() != "" && $this->getPass() != "null"){
+        if($this->getPass() != NULL && $this->getPass() != "" && $this->getPass() != "null"){
             $pass  = "uspass = '" . $this->getPass() . "',";
-        }*/
+        }
         
-        $consulta = "UPDATE usuario SET usnombre = '" . $this->getNombre() . "',". "uspass = '" . $this->getPass() . "',".
-        "usmail = '" . $this->getMail() . "', usdeshabilitado = ". $this->getDeshabilitado() ." WHERE idusuario = '" . $this->getId(). "'";
+
+        $consulta = "UPDATE usuario SET usnombre = '" . $this->getNombre() . "',". $pass. "
+        usmail = '" . $this->getMail() . "', usdeshabilitado = ". $this->getDeshabilitado() ." WHERE idusuario = '" . $this->getId(). "'";
+
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
-                $resp = true;
-            }else{
-                $this->setMensajeOperacion("usuario->modificar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("usuario->modificar: ".$this->getError());
-        }
+                $seConcreto = true;
+            }else{$this->setMensajeOperacion("usuario->modificar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("usuario->modificar: ".$this->getError());}
 
-        return $resp;
+        return $seConcreto;
     }
 
     /**
@@ -191,21 +203,17 @@ class Usuario extends BaseDatos{
      * @return boolean true si se concretó, false caso contrario
      */
     public function eliminar(){
-        $resp = false;
+        $seConcreto = false;
 
         $consulta = "DELETE FROM usuario WHERE idusuario = '" . $this->getId() ."'";
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
-                $resp = true;
-            }else{
-                $this->setMensajeOperacion("usuario->eliminar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("usuario->eliminar: ".$this->getError());
-        }
+                $seConcreto = true;
+            }else{$this->setMensajeOperacion("usuario->eliminar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("usuario->eliminar: ".$this->getError());}
 
-        return $resp;
+        return $seConcreto;
     }
 }
 

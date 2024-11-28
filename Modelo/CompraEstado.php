@@ -5,7 +5,10 @@ class CompraEstado extends BaseDatos{
     private $objCompraEstadoTipo;
     private $fechaIni;
     private $fechaFin;
-    private $mensajeOperacion;
+
+    /////////////////////////////
+    // CONSTRUCTOR //
+    /////////////////////////////
 
     /**
      * Método constructor
@@ -20,6 +23,10 @@ class CompraEstado extends BaseDatos{
         $this->fechaFin = "0000-00-00";
     }
 
+    /////////////////////////////
+    // SET Y GET //
+    /////////////////////////////
+
     /**
      * Carga datos a un objeto
      */
@@ -30,9 +37,8 @@ class CompraEstado extends BaseDatos{
         $this->setFechaIni($fechaIni);
         $this->setFechaFin($fechaFin);
     }
-
     /**
-     * Carga las claves del objeto CompraEstado
+     * Carga claves al objeto
      * @param int $idCompra
      * @param int $idUsuario
      */
@@ -46,7 +52,6 @@ class CompraEstado extends BaseDatos{
         $this->setObjCompra($objCompra);
         $this->setObjCompraEstadoTipo($objCompraEstadoTipo);
     }
-
     public function getId(){
         return $this->id;
     }
@@ -84,6 +89,9 @@ class CompraEstado extends BaseDatos{
         $this->mensajeOperacion = $mensajeOperacion;
     }
 
+    /////////////////////////////
+    // INTERACCIÓN CON LA DB //
+    /////////////////////////////
 
     /**
      * Busca una compra por id.
@@ -92,7 +100,7 @@ class CompraEstado extends BaseDatos{
      * @return boolean
      */
     public function buscar($id){
-        $resp = false;
+        $encontro = false;
         $consulta = "SELECT * FROM compraestado WHERE idcompraestado = '" . $id . "'";
 
         if($this->Iniciar()){
@@ -103,17 +111,20 @@ class CompraEstado extends BaseDatos{
                     $objCompraEstadoTipo = new CompraEstadoTipo();
                     $objCompraEstadoTipo->buscar($fila["idcompraestadotipo"]);
 
-                    $this->cargar($fila["idcompraestado"],$objCompra,$objCompraEstadoTipo,$fila["cefechaini"],$fila["cefechafin"]);
-                    $resp = true;
-                }
-            }else{
-                $this->setMensajeOperacion("compraestado->buscar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("compraestado->buscar: ".$this->getError());
-        }
+                    $this->cargar(
+                        $fila["idcompraestado"],
+                        $objCompra,
+                        $objCompraEstadoTipo,
+                        $fila["cefechaini"],
+                        $fila["cefechafin"]
+                    );
 
-        return $resp;
+                    $encontro = true;
+                }
+            }else{$this->setMensajeOperacion("compraestado->buscar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("compraestado->buscar: ".$this->getError());}
+
+        return $encontro;
     }
 
     /**
@@ -137,12 +148,8 @@ class CompraEstado extends BaseDatos{
                     $objCompraEstado->buscar($fila["idcompraestado"]);
                     array_push($arreglo, $objCompraEstado);
                 }
-            }else{
-                $this->setMensajeOperacion("compraestado->listar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("compraestado->listar: ".$this->getError());
-        }
+            }else{$this->setMensajeOperacion("compraestado->listar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("compraestado->listar: ".$this->getError());}
 
         return $arreglo;
     }
@@ -153,24 +160,20 @@ class CompraEstado extends BaseDatos{
      */
     public function insertar(){
         $resp = null;
-        $res = false;
+        $resultado = false;
 
         $consulta = "INSERT INTO compraestado(idcompra, idcompraestadotipo, cefechaini, cefechafin)
         VALUES ('".$this->getObjCompra()->getId()."','". $this->getObjCompraEstadoTipo()->getIdcet() ."', NOW(), '0000/00/00');";
 
         if($this->Iniciar()){
             $resp = $this->Ejecutar($consulta);
-            if($resp){
+            if ($resp) {
                 $this->setId($resp);
-                $res = true;
-            }else{
-                $this->setmensajeoperacion("compraestado->insertar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("compraestado->insertar: ".$this->getError());
-        }
+                $resultado = true;
+            }else{$this->setmensajeoperacion("compraestado->insertar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("compraestado->insertar: ".$this->getError());}
 
-        return $res;
+        return $resultado;
     }
 
     /**
@@ -193,22 +196,18 @@ class CompraEstado extends BaseDatos{
      * Finaliza un estado
      * @return boolean
      */
-    public function finalizarEstado(){
-        $resp = false;
+    public function finalizar(){
+        $seConcreto = false;
 
         $consulta = "UPDATE compraestado SET cefechafin = NOW() WHERE idcompraestado = '" . $this->getId(). "'";
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
-                $resp = true;
-            }else{
-                $this->setMensajeOperacion("compra->modificar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("compra->modificar: ".$this->getError());
-        }
+                $seConcreto = true;
+            }else{$this->setMensajeOperacion("compra->modificar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("compra->modificar: ".$this->getError());}
 
-        return $resp;
+        return $seConcreto;
     }
 }
 ?>

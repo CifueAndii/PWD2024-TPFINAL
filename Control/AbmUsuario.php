@@ -1,27 +1,7 @@
 <?php
 class AbmUsuario{
     //Espera como parametro un arreglo asociativo donde las claves coinciden con los uspasss de las variables instancias del objeto
-    public function abm($datos){
-        $resp = false;
-        if($datos['accion']=='editar'){
-            if($this->modificacion($datos)){
-                $resp = true;
-            }
-        }
-        if($datos['accion']=='borrar'){
-            if($this->baja($datos)){
-                $resp =true;
-            }
-        }
-        if($datos['accion']=='nuevo'){
-            if($this->alta($datos)){
-                $resp =true;
-            }
-            
-        }
-        return $resp;
-    }
-
+    
     /**
      * Espera como parametro un arreglo asociativo donde las claves coinciden con los nombres de las variables instancias del objeto
      * @param array $param
@@ -30,7 +10,12 @@ class AbmUsuario{
     private function cargarObjeto($param){
         $obj = null;
 
-        if(array_key_exists('nombre',$param) and array_key_exists('pass',$param) and array_key_exists('mail', $param) and array_key_exists('deshabilitado', $param)){
+        if(
+            array_key_exists('nombre',$param)
+            and array_key_exists('pass',$param)
+            and array_key_exists('mail', $param)
+            and array_key_exists('deshabilitado', $param)
+        ){
             $obj = new Usuario();
         
             $obj->cargar(null, $param["nombre"],$param["pass"],$param["mail"],$param["deshabilitado"]);
@@ -72,15 +57,18 @@ class AbmUsuario{
      * @param array $param
      */
     public function alta($param){
-        $resp = false;
+        $resp = array();
         $elObjtTabla = $this->cargarObjeto($param);
 
         if ($elObjtTabla!=null and $elObjtTabla->insertar()){
-            $resp = true;
+            $resp = array('resultado'=> true,'error'=>'', 'obj' => $elObjtTabla);
+        }else {
+            $resp = array('resultado'=> false,'error'=> $elObjtTabla->getmensajeoperacion());
         }
+    
         return $resp;
-    }
 
+    }
     /**
      * Permite eliminar un objeto
      * @param array $param
@@ -97,6 +85,7 @@ class AbmUsuario{
                 $resp = true;
             }
         }
+
         return $resp;
     }
 
@@ -124,18 +113,16 @@ class AbmUsuario{
      */
     public function buscar($param){
         $where = " true ";
+        $claves = ["id","nombre","pass","mail","deshabilitado"];
+        $db = ["idusuario", "usnombre", "uspass", "usmail", "usdeshabilitado"];
 
-        if($param<>NULL){
-            if(isset($param['id']))
-                $where.=" and idusuario =".$param['id'];
-            if(isset($param['nombre']))
-                $where.=" and usnombre ='".$param['nombre']."'";
-            if(isset($param['pass']))
-                $where.=" and uspass ='".$param['pass']."'";
-            if(isset($param['mail']))
-                $where.=" and usmail ='".$param['mail']."'";
-            if(isset($param['deshabilitado']))
-                $where.=" and usdeshabilitado ='".$param['deshabilitado']."'";
+
+        if ($param<>null){
+            for($i = 0; $i < count($claves); $i++){
+                if(isset($param[$claves[$i]])){
+                    $where.= " and " . $db[$i] . " = '". $param[$claves[$i]]  ."'";
+                }
+            }
         }
 
         $obj = new Usuario();
@@ -144,23 +131,22 @@ class AbmUsuario{
     }
 
     /**
-     * Verifica si ya existe un usuario en la db
+     * Revisa si ya existe un mismo mail o usuario en la db
      * @param array $param
      * @return boolean
      */
-    public function verificarUsuario($param){
+    public function revisar($param){
         $resp = false;
 
         if(isset($param["nombre"]) && isset($param["mail"])){
-            $objUsuario = new Usuario();
-            $res = $objUsuario->listar("usnombre = '" . $param["nombre"] . "' OR usmail = '" . $param["mail"] . "'");
-            
+            $objM = new Usuario();
+            $resultado = $objM->listar("usnombre = '" . $param["nombre"] . "' OR usmail = '" . $param["mail"] . "'");
             if(isset($param["id"])){
-                /*if(isset($res) && count($res) > 0 && $res[0]->getId() != $param["id"]){
+                if(isset($resultado) && count($resultado) > 0 && $resultado[0]->getId() != $param["id"]){
                     $resp = true;
                 }
-            }else{*/
-                if(isset($res) && count($res) > 0){
+            }else{
+                if(isset($resultado) && count($resultado) > 0){
                     $resp = true;
                 }
             }
@@ -169,7 +155,7 @@ class AbmUsuario{
     }
 
     /**
-     * Otorga un rol al usuario
+     * Le otorga un rol al usuario
      * @param array $param
      * @return boolean
      */
@@ -188,7 +174,7 @@ class AbmUsuario{
     }
 
     /**
-     * Quita un rol al usuario
+     * Le quita un rol al usuario
      * @param array $param
      * @return boolean
      */
@@ -199,8 +185,8 @@ class AbmUsuario{
              $objUsuarioRol = new UsuarioRol();
              $objUsuarioRol->cargarClaves($param["idrol"], $param["id"]);
              if($objUsuarioRol->eliminar()){
-                $resp = true;
-            }
+                 $resp = true;
+             }
          }
  
          return $resp;
@@ -213,15 +199,69 @@ class AbmUsuario{
      */
     public function buscarRoles($param){
         $where = " true ";
+        $claves = ["id"];
+        $clavesDB = ["idusuario"];
+
 
         if ($param<>null){
-            if(isset($param['id']))
-                $where.=" and idusuario =".$param['id'];
+            for($i = 0; $i < count($claves); $i++){
+                if(isset($param[$claves[$i]])){
+                    $where.= " and " . $clavesDB[$i] . " = '". $param[$claves[$i]]  ."'";
+                }
+            }
         }
 
         $obj = new UsuarioRol();
         $arreglo = $obj->listar($where);
         return $arreglo;
     }
+ 
+
+    public function modificarPerfil($param){
+
+        $respuesta = false;
+
+        if (isset($param['id'])){
+        
+            // Reviso si el usuario o el mail están tomados
+            if(!$this->revisar($param)){
+        
+                $param["deshabilitado"] = "'0000-00-00 00:00:00'";
+        
+                if(isset($param["passActual"])){
+                    $busqueda["id"] = $param["id"];
+                    $busqueda["pass"] = $param["passActual"];
+            
+                    // Revisar si la pass actual está bien
+                    $resultado = $this->buscar($busqueda);
+                }
+        
+                if(isset($resultado) && count($resultado) > 0){
+                    // Registrar los datos y la pass
+                    $respuesta = $this->modificacion($param);
+        
+                    if (!$respuesta){
+                        $sms_error = "La modificación no pudo concretarse";
+                    }
+                }else{
+                    $sms_error = "La contraseña actual es incorrecta";
+                }       
+            }else{
+                $sms_error = "El usuario o el mail ya se encuentran registrados";
+            }
+        }else{
+            $sms_error = "Hubo un error en el envío. Vuelva a intentarlo";
+        }
+        
+        $retorno['respuesta'] = $respuesta;
+        
+        if (isset($sms_error)){
+            $retorno['errorMsg']=$sms_error;
+        }
+
+        return $retorno;
+    }
 }
+
+
 ?>

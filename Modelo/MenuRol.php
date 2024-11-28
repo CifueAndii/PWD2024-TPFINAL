@@ -4,15 +4,24 @@ class MenuRol extends BaseDatos{
     private $objMenu;
     private $mensajeOperacion;
 
+    /////////////////////////////
+    // CONSTRUCTOR //
+    /////////////////////////////
+
     /**
-     * Método Constructor
+     * Clase constructora
      */
-    public function __construct(){
+    public function __construct()
+    {
         parent::__construct();
         $this->objRol = new Rol();
         $this->objMenu = new Menu();
         $this->mensajeOperacion = null;
     }
+
+    /////////////////////////////
+    // SET Y GET //
+    /////////////////////////////
 
     /**
      * Carga datos al objeto
@@ -23,7 +32,6 @@ class MenuRol extends BaseDatos{
         $this->setObjRol($objRol);
         $this->setObjMenu($objMenu);
     }
-
     /**
      * Carga claves al objeto
      * @param int $idRol
@@ -39,7 +47,6 @@ class MenuRol extends BaseDatos{
         $this->setObjRol($objRol);
         $this->setObjMenu($objMenu);
     }
-
     public function getObjRol(){
         return $this->objRol;
     }
@@ -59,6 +66,9 @@ class MenuRol extends BaseDatos{
         $this->mensajeOperacion = $mensajeOperacion;
     }
 
+    /////////////////////////////
+    // INTERACCIÓN CON LA DB //
+    /////////////////////////////
 
     /**
      * Busca si un rol tiene permisos para acceder a ese menu
@@ -67,30 +77,33 @@ class MenuRol extends BaseDatos{
      * @return boolean true si encontro, false caso contrario
      */
     public function buscar($idRol, $idMenu){
-        $resp = false;
+        $encontro = false;
 
-        $consulta = "SELECT * FROM menurol WHERE idmenu = '" . $idMenu . "' AND idrol = '" . $idRol . "'";
+        $consulta = "SELECT * FROM menurol WHERE idmenu = '" . $idMenu . "' AND
+        idrol = '" . $idRol . "'";
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
                 if($fila = $this->Registro()){
+                    // Rol
                     $objRol = new Rol();
                     $objRol->buscar($fila["idrol"]);
 
+                    // Menu
                     $objMenu = new Menu();
                     $objMenu->buscar($fila["idmenu"]);
                     
-                    $this->cargar($objRol,$objMenu);
-                    $resp = true;
-                }
-            }else{
-                $this->setMensajeOperacion("menurol->buscar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("menurol->buscar: ".$this->getError());
-        }
+                    $this->cargar(
+                        $objRol,
+                        $objMenu
+                    );
 
-        return $resp;
+                    $encontro = true;
+                }
+            }else{$this->setMensajeOperacion("menurol->buscar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("menurol->buscar: ".$this->getError());}
+
+        return $encontro;
     }
 
     /**
@@ -112,14 +125,11 @@ class MenuRol extends BaseDatos{
                 while($fila = $this->Registro()){
                     $objMenuRol = new MenuRol();
                     $objMenuRol->buscar($fila["idrol"], $fila["idmenu"]);
+
                     array_push($arreglo, $objMenuRol);
                 }
-            }else{
-                $this->setMensajeOperacion("menurol->listar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("menurol->listar: ".$this->getError());
-        }
+            }else{$this->setMensajeOperacion("menurol->listar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("menurol->listar: ".$this->getError());}
 
         return $arreglo;
     }
@@ -129,23 +139,19 @@ class MenuRol extends BaseDatos{
      * @return boolean true si se concretó, false caso contrario
      */
     public function insertar(){
-        $resp = false;
+        $seConcreto = false;
 
         $consulta = "INSERT INTO menurol(idrol, idmenu)
         VALUES ('". $this->getObjRol()->getId() . "','". $this->getObjMenu()->getId() ."');";
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
-                $resp = true;
+                $seConcreto = true;
 
-            }else{
-                $this->setMensajeOperacion("menurol->insertar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("menurol->insertar: ".$this->getError());
-        }
+            }else{$this->setMensajeOperacion("menurol->insertar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("menurol->insertar: ".$this->getError());}
 
-        return $resp;
+        return $seConcreto;
     }
 
     /**
@@ -153,51 +159,47 @@ class MenuRol extends BaseDatos{
      * @return boolean true si se concretó, false caso contrario
      */
     public function eliminar(){
-        $resp = false;
+        $seConcreto = false;
 
         $consulta = "DELETE FROM menurol WHERE idmenu = '" . $this->getObjMenu()->getId() ."'
         AND idrol = '" . $this->getObjRol()->getId() . "'";
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
-                $resp = true;
-            }else{
-                $this->setMensajeOperacion("menurol->eliminar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("menurol->eliminar: ".$this->getError());
-        }
+                $seConcreto = true;
+            }else{$this->setMensajeOperacion("menurol->eliminar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("menurol->eliminar: ".$this->getError());}
 
-        return $resp;
+        return $seConcreto;
     }
 
     /**
-     * Verifica si un usuario tiene permiso a páginas restringidas
+     * Verifica si tiene un permiso
      * @param int $idUsuario
-     * @param array $paginas
+     * @param array $pagEnlace
      * @return boolean
      */
-    public function verificarPermiso($idUsuario, $paginas){
-        $resp = false;
+    public function verificarPermiso($idUsuario, $pagEnlace){
+        $encontro = false;
 
         $consulta = "SELECT idusuario, menurol.idrol, menu.idmenu, medescripcion FROM menurol
         INNER JOIN usuariorol ON menurol.idrol = usuariorol.idrol
         INNER JOIN menu ON menu.idmenu = menurol.idmenu
-        WHERE idusuario = ". $idUsuario ." AND medescripcion = '". $paginas ."';";
+        WHERE idusuario = ". $idUsuario ." AND medescripcion = '". $pagEnlace ."';";
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
                 if($this->Registro()){
-                    $resp = true;
+                    $encontro = true;
                 }
-            }else{
-                $this->setMensajeOperacion("menurol->verificarPermiso: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("menurol->verificarPermiso: ".$this->getError());
-        }
+            }else{$this->setMensajeOperacion("menurol->verificarPermiso: ".$this->getError());}
+        }else{$this->setMensajeOperacion("menurol->verificarPermiso: ".$this->getError());}
 
-        return $resp;
+        return $encontro;
     }
-}
+
+
+    }
+
+
 ?>

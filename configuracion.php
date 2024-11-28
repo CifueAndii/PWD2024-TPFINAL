@@ -7,11 +7,16 @@ header ("Cache-Control: no-cache, must-revalidate ");
 // CONFIGURACION APP//
 /////////////////////////////
 
-// Ubicación del Proyecto
+
 $PROYECTO ='PWD2024-TPFINAL';
 $ROOT =$_SERVER['DOCUMENT_ROOT']."/$PROYECTO/";
 
 include_once($ROOT.'Util/funciones.php');
+include_once($ROOT.'Util/funcionesMailer.php');
+include 'vendor/phpmailer/phpmailer/src/Exception.php';
+include 'vendor/phpmailer/phpmailer/src/PHPMailer.php';
+include 'vendor/phpmailer/phpmailer/src/SMTP.php';
+
 $GLOBALS['ROOT']=$ROOT;
 
 // Página de Autenticación

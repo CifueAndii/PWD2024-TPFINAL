@@ -1,3 +1,4 @@
+
 <?php
 class CompraEstadoTipo extends BaseDatos{
     private $idcompraestadotipo;
@@ -5,10 +6,12 @@ class CompraEstadoTipo extends BaseDatos{
     private $cetdetalle;
     private $mensajeOperacion;
 
+
     /**
-     * Método Constructor
+     * Clase constructora
      */
-    public function __construct(){
+    public function __construct()
+    {
         parent::__construct();
         $this->idcompraestadotipo = null;
         $this->cetdescripcion = null;
@@ -27,6 +30,8 @@ class CompraEstadoTipo extends BaseDatos{
         $this->setCetdescripcion($cetdescripcion);
         $this->setCetdetalle($cetdetalle);
     }
+
+    // Getters y setters
 
     public function getIdcet(){
         return $this->idcompraestadotipo;
@@ -54,6 +59,9 @@ class CompraEstadoTipo extends BaseDatos{
         $this->mensajeOperacion = $mensajeOperacion;
     }
 
+
+    // Métodos de interacción con la db
+
     /**
      * Busca un Compraestadotipo por id
      * Sus datos son colocados en el objeto
@@ -61,23 +69,24 @@ class CompraEstadoTipo extends BaseDatos{
      * @return boolean true si encontro, false caso contrario
      */
     public function buscar($idcompraestadotipo){
-        $resp = false;
+        $encontro = false;
         $consulta = "SELECT * FROM compraestadotipo WHERE idcompraestadotipo = '" . $idcompraestadotipo . "'";
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
                 if($fila = $this->Registro()){
-                    $this->cargar($idcompraestadotipo,$fila["cetdescripcion"],$fila["cetdetalle"]);
-                    $resp = true;
-                }
-            }else{
-                $this->setMensajeOperacion("compraestadotipo->buscar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("compraestadotipo->buscar: ".$this->getError());
-        }
+                    $this->cargar(
+                        $idcompraestadotipo,
+                        $fila["cetdescripcion"],
+                        $fila["cetdetalle"]
+                    );
 
-        return $resp;
+                    $encontro = true;
+                }
+            }else{$this->setMensajeOperacion("compraestadotipo->buscar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("compraestadotipo->buscar: ".$this->getError());}
+
+        return $encontro;
     }
 
     /**
@@ -101,12 +110,8 @@ class CompraEstadoTipo extends BaseDatos{
                     $objCompraestadotipo->cargar($fila["idcompraestadotipo"],$fila["cetdescripcion"],$fila["cetdetalle"]);
                     array_push($arreglo, $objCompraestadotipo);
                 }
-            }else{
-                $this->setMensajeOperacion("compraestadotipo->listar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("compraestadotipo->listar: ".$this->getError());
-        }
+            }else{$this->setMensajeOperacion("compraestadotipo->listar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("compraestadotipo->listar: ".$this->getError());}
 
         return $arreglo;
     }
@@ -117,23 +122,20 @@ class CompraEstadoTipo extends BaseDatos{
      */
     public function insertar(){
         $resp = null;
-        $res = false;
+        $resultado = false;
 
-        $consulta = "INSERT INTO compraestadotipo(cetdescripcion, cetdetalle) VALUES ('". $this->getCetdescripcion()."','". $this->getCetdetalle()."');";
+        $consulta = "INSERT INTO compraestadotipo(cetdescripcion, cetdetalle)
+        VALUES ('". $this->getCetdescripcion()."','". $this->getCetdetalle()."');";
 
         if($this->Iniciar()){
             $resp = $this->Ejecutar($consulta);
             if ($resp) {
                 $this->setIdcet($resp);
-                $res = true;
-            }else{
-                $this->setmensajeoperacion("compraestadotipo->insertar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("compraestadotipo->insertar: ".$this->getError());
-        }
+                $resultado = true;
+            }else{$this->setmensajeoperacion("compraestadotipo->insertar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("compraestadotipo->insertar: ".$this->getError());}
 
-        return $res;
+        return $resultado;
     }
 
     /**
@@ -141,21 +143,17 @@ class CompraEstadoTipo extends BaseDatos{
      * @return boolean true si se concretó, false caso contrario
      */
     public function modificar(){
-        $resp = false;
+        $seConcreto = false;
 
         $consulta = "UPDATE compraestadotipo SET cetdescripcion = '" . $this->getCetdescripcion(). "', cetdetalle = '". $this->getCetdetalle() ."' WHERE idcompraestadotipo = '" . $this->getIdcet(). "'";
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
-                $resp = true;
-            }else{
-                $this->setMensajeOperacion("idcompraestadotipo->modificar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("idcompraestadotipo->modificar: ".$this->getError());
-        }
+                $seConcreto = true;
+            }else{$this->setMensajeOperacion("idcompraestadotipo->modificar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("idcompraestadotipo->modificar: ".$this->getError());}
 
-        return $resp;
+        return $seConcreto;
     }
 
     /**
@@ -163,21 +161,19 @@ class CompraEstadoTipo extends BaseDatos{
      * @return boolean true si se concretó, false caso contrario
      */
     public function eliminar(){
-        $resp = false;
+        $seConcreto = false;
 
         $consulta = "DELETE FROM compraestadotipo WHERE idcompraestadotipo = '" . $this->getIdcet() ."'";
 
         if($this->Iniciar()){
             if($this->Ejecutar($consulta)){
-                $resp = true;
-            }else{
-                $this->setMensajeOperacion("compraestadotipo->eliminar: ".$this->getError());
-            }
-        }else{
-            $this->setMensajeOperacion("compraestadotipo->eliminar: ".$this->getError());
-        }
+                $seConcreto = true;
+            }else{$this->setMensajeOperacion("compraestadotipo->eliminar: ".$this->getError());}
+        }else{$this->setMensajeOperacion("compraestadotipo->eliminar: ".$this->getError());}
 
-        return $resp;
+        return $seConcreto;
     }
 }
+
+
 ?>

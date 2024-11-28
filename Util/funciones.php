@@ -22,6 +22,31 @@ function data_submitted() {
             }
         }
         return $_AAux;
+        
+}
+
+/**
+ * Plantilla para mostrar un cartel de error
+ * @param string $contenidoError
+ * @return string
+ */
+function mostrarError($contenidoError){
+    return '
+        <div class="col-12 alert alert-danger m-3 p-3 mx-auto alert-dismissible fade show" role="alert">'.
+        $contenidoError .
+        '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
+}
+
+/**
+ * Plantilla para mostrar un cartel de éxito
+ * @param string $contenidoExito
+ * @return string
+ */
+function mostrarExito($contenidoExito){
+    return '
+        <div class="col-12 col-md-7 alert alert-success m-3 p-3 mx-auto alert-dismissible fade show" role="alert">'.
+        $contenidoExito .
+        '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
 }
 
 /**

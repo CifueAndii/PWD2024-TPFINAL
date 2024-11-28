@@ -1,27 +1,7 @@
 <?php
 class AbmRol{
     //Espera como parametro un arreglo asociativo donde las claves coinciden con las variables instancias del objeto
-    public function abm($datos){
-        $resp = false;
-        if($datos['accion']=='editar'){
-            if($this->modificacion($datos)){
-                $resp = true;
-            }
-        }
-        if($datos['accion']=='borrar'){
-            if($this->baja($datos)){
-                $resp =true;
-            }
-        }
-        if($datos['accion']=='nuevo'){
-            if($this->alta($datos)){
-                $resp =true;
-            }
-            
-        }
-        return $resp;
-    }
-
+    
     /**
      * Espera como parametro un arreglo asociativo donde las claves coinciden con los nombres de las variables instancias del objeto
      * @param array $param
@@ -30,8 +10,11 @@ class AbmRol{
     private function cargarObjeto($param){
         $obj = null;
 
-        if(array_key_exists('roldescripcion',$param)){
+        if(
+            array_key_exists('roldescripcion',$param)
+        ){
             $obj = new Rol();
+        
             $obj->cargar(null, $param["roldescripcion"]);
         }
         return $obj;
@@ -71,15 +54,18 @@ class AbmRol{
      * @param array $param
      */
     public function alta($param){
-        $resp = false;
+        $resp = array();
         $elObjtTabla = $this->cargarObjeto($param);
 
         if ($elObjtTabla!=null and $elObjtTabla->insertar()){
-            $resp = true;
+            $resp = array('resultado'=> true,'error'=>'', 'obj' => $elObjtTabla);
+        }else {
+            $resp = array('resultado'=> false,'error'=> $elObjtTabla->getMensajeOperacion());
         }
+    
         return $resp;
-    }
 
+    }
     /**
      * Permite eliminar un objeto
      * @param array $param
@@ -104,7 +90,7 @@ class AbmRol{
      */
     public function modificacion($param){
         $resp = false;
-        if($this->seteadosCamposClaves($param)){
+        if ($this->seteadosCamposClaves($param)){
             $elObjtTabla = $this->cargarObjeto($param);
             $elObjtTabla->setId($param["id"]);
             if($elObjtTabla!=null and $elObjtTabla->modificar()){
@@ -121,12 +107,16 @@ class AbmRol{
      */
     public function buscar($param){
         $where = " true ";
+        $claves = ["id","roldescripcion"];
+        $db = ["idrol", "roldescripcion"];
 
-        if($param<>NULL){
-            if(isset($param["id"]))
-                $where .= "and idrol = " . $param["id"];
-            if(isset($param["roldescripcion"]))
-                $where.=" and roldescripcion ='".$param['roldescripcion']."'";
+
+        if ($param<>null){
+            for($i = 0; $i < count($claves); $i++){
+                if(isset($param[$claves[$i]])){
+                    $where.= " and " . $db[$i] . " = '". $param[$claves[$i]]  ."'";
+                }
+            }
         }
 
         $obj = new Rol();
@@ -135,7 +125,7 @@ class AbmRol{
     }
 
     /**
-     * Otorga el permiso a un rol al acceder a una página
+     * Da el permiso a un rol a acceder a una página
      * @param array
      * @return boolean
      */
@@ -154,7 +144,7 @@ class AbmRol{
     }
 
     /**
-     * Quita el permiso a un rol al acceder a una página
+     * Da el permiso a un rol a acceder a una página
      * @param array
      * @return boolean
      */
@@ -173,22 +163,33 @@ class AbmRol{
     }
 
     /**
-     * Retorna todos los menu a los que puede acceder el Rol
+     * Retorna todos sus obj menu a los que puede acceder
      * @param array $param
      * @return array|null
      */
     public function buscarPermisos($param){
         $where = " true ";
+        $claves = ["id"];
+        $clavesDB = ["idrol"];
 
-        if($param<>NULL){
-            if(isset($param["id"]))
-                $where .= "and idrol = " . $param["id"];
+
+        if ($param<>null){
+            for($i = 0; $i < count($claves); $i++){
+                if(isset($param[$claves[$i]])){
+                    $where.= " and " . $clavesDB[$i] . " = '". $param[$claves[$i]]  ."'";
+                }
+            }
         }
 
         $obj = new MenuRol();
         $arreglo = $obj->listar($where);
         return $arreglo;
     }
+
+
+
+
+
 }
 
 
