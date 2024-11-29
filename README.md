@@ -4,7 +4,7 @@
 E-Commerce que integra el modelo MVC con control de acceso a través del manejo de sesiones y una ORM que define roles y permisos para los usuarios.
 
 
-## Alumnos: 
+# Alumnos: 
 - ALIAS, Paula | FAI-5103 | [@pirotonta](https://www.github.com/pirotonta)
 - CIFUENTES, Andrés | FAI-2258 | [@CifueAndii](https://www.github.com/CifueAndii)
 
